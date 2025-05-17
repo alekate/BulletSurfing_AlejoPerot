@@ -1,0 +1,23 @@
+# ninja log v5
+1	2511	7691228112962411	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	73a7c028ab2c53ea
+28	671	7691228094463080	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	30220e718f432505
+696	821	7691228096044042	D:/Descargas Disco Duro/Unity Stuff/Unity Projects/The ButtonPyOAlejo Perot/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m634a41/obj/arm64-v8a/libswappywrapper.so	d33c6a20bc346cac
+13	2054	7691228107583929	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	8042fed1f7aa22f0
+2512	2615	7691228113989538	D:/Descargas Disco Duro/Unity Stuff/Unity Projects/The ButtonPyOAlejo Perot/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m634a41/obj/arm64-v8a/libgame.so	6ab905064aae9a0f
+17	2085	7691228108264215	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	e4bbe810e7eda6b6
+4	2104	7691228108764556	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	46a25a5dedaab2fa
+24	2101	7691228108434251	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	944738cdaf94576b
+7	2172	7691228109513660	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	5308bd50677b95aa
+20	2155	7691228109323618	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	7d04305ad75bf639
+10	2388	7691228111682324	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	73d42e7c34c5b415
+32	230	7691332189478775	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	30220e718f432505
+231	330	7691332190523296	D:/Descargas Disco Duro/Unity Stuff/Unity Projects/The ButtonPyOAlejo Perot/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m634a41/obj/arm64-v8a/libswappywrapper.so	d33c6a20bc346cac
+17	1411	7691332201267961	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	e4bbe810e7eda6b6
+14	1420	7691332201357984	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	8042fed1f7aa22f0
+10	1436	7691332201532226	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	5308bd50677b95aa
+19	1482	7691332202002979	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	944738cdaf94576b
+12	1505	7691332202233047	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	46a25a5dedaab2fa
+29	1553	7691332202745247	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	7d04305ad75bf639
+22	1708	7691332204265834	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	73d42e7c34c5b415
+5	1824	7691332205436653	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	73a7c028ab2c53ea
+1824	1882	7691332206079872	D:/Descargas Disco Duro/Unity Stuff/Unity Projects/The ButtonPyOAlejo Perot/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/5m634a41/obj/arm64-v8a/libgame.so	6ab905064aae9a0f
