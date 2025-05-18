@@ -33,23 +33,20 @@ public class CameraMove : MonoBehaviour
 
     private void UpdateCameraTilt()
     {
-        if (cameraHolder != null)
-        {
-            float tiltAngle = skateMovement.horizontalMouseMovementValue * 10f;
+        float tiltAngle = skateMovement.horizontalMouseMovementValue * 10f;
 
-            // Obtené la rotación actual y agregá inclinación en Z
-            Quaternion targetRotation = Quaternion.Euler(
-                cameraHolder.localEulerAngles.x,
-                cameraHolder.localEulerAngles.y,
-                -tiltAngle // El signo puede depender del efecto visual deseado
-            );
+        // Obtené la rotación actual y agregá inclinación en Z
+        Quaternion targetRotation = Quaternion.Euler(
+            cameraHolder.localEulerAngles.x,
+            cameraHolder.localEulerAngles.y,
+            -tiltAngle // El signo puede depender del efecto visual deseado
+        );
 
-            cameraHolder.localRotation = Quaternion.Lerp(
-                cameraHolder.localRotation,
-                targetRotation,
-                Time.deltaTime * 5f // velocidad del tilt
-            );
-        }
+        cameraHolder.localRotation = Quaternion.Lerp(
+            cameraHolder.localRotation,
+            targetRotation,
+            Time.deltaTime * 5f // velocidad del tilt
+        );
     }
 
 }

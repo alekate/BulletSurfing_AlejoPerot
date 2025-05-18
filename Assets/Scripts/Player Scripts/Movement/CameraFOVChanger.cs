@@ -8,7 +8,9 @@ public class CameraFOVChanger : MonoBehaviour
     [SerializeField] private float speedMultiplier = 1f; // Cuánto influye la velocidad
     [SerializeField] private SkateMovement skateMovement;
 
-    private float playerCameraFOV = 60f;
+    [SerializeField] private float playerCameraFOV = 60f;
+    [SerializeField] private float maxFOV;
+
 
     void FixedUpdate()
     {
@@ -17,7 +19,7 @@ public class CameraFOVChanger : MonoBehaviour
 
     void SpeedFOVChanger()
     {
-        float targetFOV = 60 + (skateMovement.currentSpeed * speedMultiplier);
+        float targetFOV = Mathf.Min(60 + (skateMovement.currentSpeed * speedMultiplier), maxFOV);
 
         playerCameraFOV = Mathf.Lerp(playerCameraFOV, targetFOV, FOVChangerGrade * Time.fixedDeltaTime);
         Camera.main.fieldOfView = playerCameraFOV;

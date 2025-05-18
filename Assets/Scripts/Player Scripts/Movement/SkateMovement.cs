@@ -8,6 +8,8 @@ public class SkateMovement : MonoBehaviour
     [SerializeField] private float acceleration = 2.0f;
     public float maxSpeed;
     [SerializeField] private float friction;
+    [SerializeField] private float brakeForce = 20f;
+
 
     [Header("Mouse Input")]
     [SerializeField] private float mouseYawTolerance;
@@ -64,9 +66,10 @@ public class SkateMovement : MonoBehaviour
         {
             isSkating = true;
 
-            if (Mathf.Abs(horizontalMouseMovementValue) != 0 && Mathf.Abs(horizontalMouseMovementValue) > movementThresholdToAccelerate)
+            moveDirection = GetCameraForwardDirection();
+
+            if (Mathf.Abs(horizontalMouseMovementValue) > movementThresholdToAccelerate)
             {
-                moveDirection = GetCameraForwardDirection();
                 currentSpeed += acceleration * Time.deltaTime;
                 currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
             }
@@ -81,6 +84,7 @@ public class SkateMovement : MonoBehaviour
             isSkating = false;
         }
     }
+
 
 
     private void DecreaseVelocity() //Por movimiento bruzco del mouse
@@ -101,12 +105,19 @@ public class SkateMovement : MonoBehaviour
         }
         else if (!isSkating && currentVelocityMagnitude > 0)
         {
-            // Simular fricción cuando no se patina
+            // Fricción pasiva
             Vector3 frictionForce = -flatVelocity.normalized * friction;
             rb.AddForce(frictionForce, ForceMode.Acceleration);
         }
 
-        // Limitar velocidad máxima manualmente
+        // FRENADO ACTIVO - Click derecho
+        if (Input.GetMouseButton(1) && currentVelocityMagnitude > 0.1f)
+        {
+            Vector3 brakeDirection = -flatVelocity.normalized;
+            rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
+        }
+
+        // Limitar velocidad máxima
         if (currentVelocityMagnitude > maxSpeed)
         {
             Vector3 limitedVelocity = flatVelocity.normalized * maxSpeed;
@@ -115,6 +126,7 @@ public class SkateMovement : MonoBehaviour
 
         currentSpeed = rb.velocity.magnitude;
     }
+
 
     private void AlignToGround()
     {
