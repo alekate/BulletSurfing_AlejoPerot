@@ -1,44 +1,52 @@
 using UnityEngine;
 using TMPro;
+using Unity.Collections;
 
 public class SkateMovement : MonoBehaviour
 {
+    [Header("Skate Settings")]
     [SerializeField] private float acceleration = 2.0f;
     public float maxSpeed;
-    //[SerializeField] private float friction;
-    [SerializeField] private Camera mainCamera;
-    [SerializeField] private TextMeshProUGUI velocityText;
+    [SerializeField] private float friction;
 
-    [SerializeField] private Transform raycastOrigin; // Un transform desde donde tirar el raycast
-    [SerializeField] private Transform bodyToRotate; // Qué parte del jugador querés inclinar
+    [Header("Mouse Input")]
+    [SerializeField] private float mouseYawTolerance;
+    [SerializeField] private float movementThresholdToAccelerate;
+    [SerializeField] private float decreasingFactor = 0f;
+    public float horizontalMouseMovementValue { get; private set; }
+    [SerializeField, ReadOnly] private float debugMouseX;
+
+
+    [Header("Camera")]
+    [SerializeField] private Camera mainCamera;
+
+    [Header("Ground Alignment")]
+    [SerializeField] private Transform raycastOrigin; // Desde dónde tirar el raycast
+    [SerializeField] private Transform bodyToRotate;  // Qué parte del jugador se inclina
     [SerializeField] private float raycastDistance = 3f;
     [SerializeField] private float rotationSpeed = 5f;
 
+    // --- Runtime ---
+    private Rigidbody rb;
     private Quaternion smoothTilt = Quaternion.identity;
-
     private Vector3 moveDirection;
     public float currentSpeed;
     private bool isSkating;
 
-    [SerializeField] private float mouseYawTolerance;
-    [SerializeField] private float decreasingFactor = 0f;
-    public float horizontalMouseMovementValue { get; private set; }
-
-    private Rigidbody rb;
-
-    private void Awake()
+   private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
     }
+
 
     private void FixedUpdate()
     {
         horizontalMouseMovementValue = Input.GetAxis("Mouse X");
+        debugMouseX = horizontalMouseMovementValue;
+
         PlayerInput();
         Move();
         AlignToGround();
-        UpdateVelocityUI();
 
         if(Input.GetKeyDown(KeyCode.Q))
         {
@@ -52,60 +60,60 @@ public class SkateMovement : MonoBehaviour
 
     private void PlayerInput()
     {
-        if (Input.GetMouseButton(0)) // Botón izquierdo - patinar
+        if (Input.GetMouseButton(0))
         {
             isSkating = true;
 
-            if (horizontalMouseMovementValue != 0)
+            if (Mathf.Abs(horizontalMouseMovementValue) != 0 && Mathf.Abs(horizontalMouseMovementValue) > movementThresholdToAccelerate)
             {
                 moveDirection = GetCameraForwardDirection();
                 currentSpeed += acceleration * Time.deltaTime;
                 currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
+            }
 
-                if (Mathf.Abs(horizontalMouseMovementValue) > mouseYawTolerance)
-                {
-                    DecreaseVelocity(); // Imaginando que frena si te movés mucho el mouse
-                }
+            if (Mathf.Abs(horizontalMouseMovementValue) > mouseYawTolerance)
+            {
+                DecreaseVelocity(); // Penalizás movimientos bruscos
             }
         }
         else
         {
             isSkating = false;
         }
-
-        if (Input.GetMouseButton(1)) // Botón derecho - frenar
-        {
-            currentSpeed -= acceleration * 2f * Time.deltaTime; // Frenar más rápido
-            currentSpeed = Mathf.Max(currentSpeed, 0); // No dejar que baje de 0
-        }
-
     }
- 
+
 
     private void DecreaseVelocity() //Por movimiento bruzco del mouse
     {
         Debug.Log(horizontalMouseMovementValue);
         currentSpeed -= decreasingFactor;
     }
+
     private void Move()
     {
-        if (isSkating && currentSpeed > 0)
-        {
-            Vector3 movement = moveDirection * currentSpeed * Time.fixedDeltaTime;
-            rb.MovePosition(rb.position + movement);
-        }
-        else if (!isSkating && currentSpeed > 0)
-        {
-            //currentSpeed *= 1 - (friction * Time.fixedDeltaTime);
+        Vector3 flatVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        float currentVelocityMagnitude = flatVelocity.magnitude;
 
-            if (currentSpeed < 0.01f)
-            {
-                currentSpeed = 0f;
-            }
-
-            /*Vector3 frictionMovement = moveDirection * currentSpeed * Time.fixedDeltaTime;
-            rb.MovePosition(rb.position + frictionMovement);*/
+        if (isSkating && currentVelocityMagnitude < maxSpeed)
+        {
+            Vector3 desiredDirection = moveDirection.normalized;
+            rb.AddForce(desiredDirection * acceleration, ForceMode.Acceleration);
         }
+        else if (!isSkating && currentVelocityMagnitude > 0)
+        {
+            // Simular fricción cuando no se patina
+            Vector3 frictionForce = -flatVelocity.normalized * friction;
+            rb.AddForce(frictionForce, ForceMode.Acceleration);
+        }
+
+        // Limitar velocidad máxima manualmente
+        if (currentVelocityMagnitude > maxSpeed)
+        {
+            Vector3 limitedVelocity = flatVelocity.normalized * maxSpeed;
+            rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
+        }
+
+        currentSpeed = rb.velocity.magnitude;
     }
 
     private void AlignToGround()
@@ -123,16 +131,6 @@ public class SkateMovement : MonoBehaviour
             );
 
             bodyToRotate.rotation = newRotation;
-        }
-    }
-
-
-    private void UpdateVelocityUI()
-    {
-        if (velocityText != null)
-        if (velocityText != null)
-        {
-            velocityText.text = Mathf.Ceil(currentSpeed).ToString();
         }
     }
 
