@@ -9,7 +9,7 @@ public class SkateMovement : MonoBehaviour
     public float maxSpeed;
     [SerializeField] private float friction;
     [SerializeField] private float brakeForce = 20f;
-
+    public float currentSpeed;
 
     [Header("Mouse Input")]
     [SerializeField] private float mouseYawTolerance;
@@ -18,28 +18,37 @@ public class SkateMovement : MonoBehaviour
     public float horizontalMouseMovementValue { get; private set; }
     [SerializeField, ReadOnly] private float debugMouseX;
 
-
     [Header("Camera")]
     [SerializeField] private Camera mainCamera;
 
     [Header("Ground Alignment")]
-    [SerializeField] private Transform raycastOrigin; // Desde dónde tirar el raycast
-    [SerializeField] private Transform bodyToRotate;  // Qué parte del jugador se inclina
+    [SerializeField] private Transform raycastOrigin;
+    [SerializeField] private Transform bodyToRotate;
     [SerializeField] private float raycastDistance = 3f;
     [SerializeField] private float rotationSpeed = 5f;
 
-    // --- Runtime ---
+    [Header("Speed Particles")]
+    [SerializeField] private ParticleSystem speedLinesParticles;
+    [SerializeField] private float particleSpeedThreshold = 20f;
+    [SerializeField] private float maxEmissionRate = 100f;
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource skateAudioSource;
+    [SerializeField] private float minVolume = 0.1f;
+    [SerializeField] private float maxVolume = 1f;
+    [SerializeField] private float minPitch = 0.8f;
+    [SerializeField] private float maxPitch = 1.2f;
+    [SerializeField] private float minSpeedToPlaySound = 0.5f;
+
     private Rigidbody rb;
     private Quaternion smoothTilt = Quaternion.identity;
     private Vector3 moveDirection;
-    public float currentSpeed;
     private bool isSkating;
 
-   private void Awake()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
     }
-
 
     private void FixedUpdate()
     {
@@ -49,23 +58,23 @@ public class SkateMovement : MonoBehaviour
         PlayerInput();
         Move();
         AlignToGround();
+        HandleSpeedParticles();
+        UpdateSkateSound();
 
-        if(Input.GetKeyDown(KeyCode.Q))
+
+        if (Input.GetKey(KeyCode.Q))
         {
             currentSpeed += 10;
         }
 
         currentSpeed = Mathf.Max(currentSpeed, 0f);
-
     }
-
 
     private void PlayerInput()
     {
         if (Input.GetMouseButton(0))
         {
             isSkating = true;
-
             moveDirection = GetCameraForwardDirection();
 
             if (Mathf.Abs(horizontalMouseMovementValue) > movementThresholdToAccelerate)
@@ -76,7 +85,7 @@ public class SkateMovement : MonoBehaviour
 
             if (Mathf.Abs(horizontalMouseMovementValue) > mouseYawTolerance)
             {
-                DecreaseVelocity(); // Penalizás movimientos bruscos
+                DecreaseVelocity();
             }
         }
         else
@@ -85,9 +94,7 @@ public class SkateMovement : MonoBehaviour
         }
     }
 
-
-
-    private void DecreaseVelocity() //Por movimiento bruzco del mouse
+    private void DecreaseVelocity()
     {
         Debug.Log(horizontalMouseMovementValue);
         currentSpeed -= decreasingFactor;
@@ -105,19 +112,16 @@ public class SkateMovement : MonoBehaviour
         }
         else if (!isSkating && currentVelocityMagnitude > 0)
         {
-            // Fricción pasiva
             Vector3 frictionForce = -flatVelocity.normalized * friction;
             rb.AddForce(frictionForce, ForceMode.Acceleration);
         }
 
-        // FRENADO ACTIVO - Click derecho
         if (Input.GetMouseButton(1) && currentVelocityMagnitude > 0.1f)
         {
             Vector3 brakeDirection = -flatVelocity.normalized;
             rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
         }
 
-        // Limitar velocidad máxima
         if (currentVelocityMagnitude > maxSpeed)
         {
             Vector3 limitedVelocity = flatVelocity.normalized * maxSpeed;
@@ -126,7 +130,6 @@ public class SkateMovement : MonoBehaviour
 
         currentSpeed = rb.velocity.magnitude;
     }
-
 
     private void AlignToGround()
     {
@@ -152,4 +155,46 @@ public class SkateMovement : MonoBehaviour
         cameraForward.y = 0;
         return cameraForward.normalized;
     }
+
+    private void HandleSpeedParticles()
+    {
+        var emission = speedLinesParticles.emission;
+
+        if (currentSpeed > particleSpeedThreshold)
+        {
+            if (!speedLinesParticles.isPlaying)
+                speedLinesParticles.Play();
+
+            float t = Mathf.InverseLerp(particleSpeedThreshold, maxSpeed, currentSpeed);
+            emission.rateOverTime = t * maxEmissionRate;
+        }
+        else
+        {
+            if (speedLinesParticles.isPlaying)
+                speedLinesParticles.Stop();
+        }
+    }
+
+    private void UpdateSkateSound()
+    {
+        if (currentSpeed > minSpeedToPlaySound)
+        {
+            if (!skateAudioSource.isPlaying)
+            {
+                skateAudioSource.Play();
+            }
+
+            float t = Mathf.InverseLerp(minSpeedToPlaySound, maxSpeed, currentSpeed);
+            skateAudioSource.volume = Mathf.Lerp(minVolume, maxVolume, t);
+            skateAudioSource.pitch = Mathf.Lerp(minPitch, maxPitch, t);
+        }
+        else
+        {
+            if (skateAudioSource.isPlaying)
+            {
+                skateAudioSource.Stop();
+            }
+        }
+    }
+
 }

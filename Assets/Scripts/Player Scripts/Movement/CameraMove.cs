@@ -10,7 +10,7 @@ public class CameraMove : MonoBehaviour
 
     [SerializeField] private Transform cameraHolder;
     [SerializeField] private SkateMovement skateMovement;
-
+    
 
     void Start()
     {

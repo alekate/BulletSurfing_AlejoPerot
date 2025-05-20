@@ -8,20 +8,40 @@ public class Pickup : MonoBehaviour
     private Transform playerPos;
 
     private bool followPlayer = false;
+    private bool hasBeenCollected = false; 
 
     private void Start()
     {
         GameObject player = GameObject.FindWithTag("Player");
         pickupCounter = player.GetComponent<PickupCounter>();
-        playerPos = player.GetComponent<Transform>();
+        playerPos = player.transform;
+    }
+
+    private void Update()
+    {
+        InstaWin();
+    }
+
+    public void InstaWin()
+    {
+        // Easter Egg
+        if (Input.GetKeyDown(KeyCode.W) && !hasBeenCollected)
+        {
+            hasBeenCollected = true;
+            followPlayer = true;
+            pickupCounter.currentPickups++;
+
+            StartCoroutine(FollowAndDestroy());
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && !hasBeenCollected)
         {
+            hasBeenCollected = true; 
             followPlayer = true;
-            pickupCounter.pickupTotal++;
+            pickupCounter.currentPickups++;
 
             StartCoroutine(FollowAndDestroy());
         }
@@ -42,4 +62,3 @@ public class Pickup : MonoBehaviour
         Destroy(gameObject);
     }
 }
-
