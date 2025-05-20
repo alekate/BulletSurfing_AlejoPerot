@@ -29627,7 +29627,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameplayUI: {fileID: 775275810}
   pauseUI: {fileID: 254169416}
-  tutorialUI: {fileID: 0}
+  tutorialUI: {fileID: 1239096622}
+  ExitButton: {fileID: 1729784212}
   isPaused: 0
   showTutorial: 1
 --- !u!114 &1681450582

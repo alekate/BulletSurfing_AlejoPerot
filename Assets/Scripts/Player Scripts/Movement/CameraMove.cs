@@ -5,8 +5,10 @@ using UnityEngine;
 public class CameraMove : MonoBehaviour
 {
     public Vector2 turn;
-    public float sensX = 5f;
-    public float sensY = 5f;
+    public float sensX;
+    public float sensY;
+
+    public float turnValue;
 
     [SerializeField] private Transform cameraHolder;
     [SerializeField] private SkateMovement skateMovement;
@@ -33,7 +35,7 @@ public class CameraMove : MonoBehaviour
 
     private void UpdateCameraTilt()
     {
-        float tiltAngle = skateMovement.horizontalMouseMovementValue * 10f;
+        float tiltAngle = skateMovement.horizontalMouseMovementValue * turnValue;
 
         // Obtené la rotación actual y agregá inclinación en Z
         Quaternion targetRotation = Quaternion.Euler(
