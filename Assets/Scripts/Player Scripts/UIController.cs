@@ -7,7 +7,7 @@ using UnityEngine;
 public class UIController : MonoBehaviour
 {
     [Header("Player")]
-    [SerializeField] private SkateMovement skateMovementScripts;
+    [SerializeField] private NewSkateMovement skateMovement;
     [SerializeField] private TextMeshProUGUI velocityText;
 
     [Header("Pickups")]
@@ -21,6 +21,7 @@ public class UIController : MonoBehaviour
     {
         youLoseText.gameObject.SetActive(false);
         youWinText.gameObject.SetActive(false);
+        skateMovement = FindObjectOfType<NewSkateMovement>();
 
     }
     void Update()
@@ -37,7 +38,7 @@ public class UIController : MonoBehaviour
 
     public void UpdateVelocityUI()
     {
-        velocityText.text = Mathf.Ceil(skateMovementScripts.currentSpeed).ToString();
+        velocityText.text = Mathf.Ceil(skateMovement.currentSpeed).ToString();
     }
 
     public void FinnishGameUI()

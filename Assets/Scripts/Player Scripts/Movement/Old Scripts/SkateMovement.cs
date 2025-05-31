@@ -1,6 +1,4 @@
 using UnityEngine;
-using TMPro;
-using Unity.Collections;
 
 public class SkateMovement : MonoBehaviour
 {
@@ -16,32 +14,12 @@ public class SkateMovement : MonoBehaviour
     [SerializeField] private float movementThresholdToAccelerate;
     [SerializeField] private float decreasingFactor = 0f;
     public float horizontalMouseMovementValue { get; private set; }
-    [SerializeField, ReadOnly] private float debugMouseX;
+    [SerializeField] private float debugMouseX;
 
     [Header("Camera")]
     [SerializeField] private Camera mainCamera;
 
-    [Header("Ground Alignment")]
-    [SerializeField] private Transform raycastOrigin;
-    [SerializeField] private Transform bodyToRotate;
-    [SerializeField] private float raycastDistance = 3f;
-    [SerializeField] private float rotationSpeed = 5f;
-
-    [Header("Speed Particles")]
-    [SerializeField] private ParticleSystem speedLinesParticles;
-    [SerializeField] private float particleSpeedThreshold = 20f;
-    [SerializeField] private float maxEmissionRate = 100f;
-
-    [Header("Audio")]
-    [SerializeField] private AudioSource skateAudioSource;
-    [SerializeField] private float minVolume = 0.1f;
-    [SerializeField] private float maxVolume = 1f;
-    [SerializeField] private float minPitch = 0.8f;
-    [SerializeField] private float maxPitch = 1.2f;
-    [SerializeField] private float minSpeedToPlaySound = 0.5f;
-
     private Rigidbody rb;
-    private Quaternion smoothTilt = Quaternion.identity;
     private Vector3 moveDirection;
     private bool isSkating;
 
@@ -57,15 +35,6 @@ public class SkateMovement : MonoBehaviour
 
         PlayerInput();
         Move();
-        AlignToGround();
-        HandleSpeedParticles();
-        UpdateSkateSound();
-
-
-        if (Input.GetKey(KeyCode.Q))
-        {
-            currentSpeed += 10;
-        }
 
         currentSpeed = Mathf.Max(currentSpeed, 0f);
     }
@@ -131,24 +100,6 @@ public class SkateMovement : MonoBehaviour
         currentSpeed = rb.velocity.magnitude;
     }
 
-    private void AlignToGround()
-    {
-        RaycastHit hit;
-        if (Physics.Raycast(raycastOrigin.position, Vector3.down, out hit, raycastDistance))
-        {
-            Quaternion groundTilt = Quaternion.FromToRotation(Vector3.up, hit.normal);
-            smoothTilt = Quaternion.Slerp(smoothTilt, groundTilt, Time.deltaTime * rotationSpeed);
-
-            Quaternion newRotation = Quaternion.Euler(
-                smoothTilt.eulerAngles.x,
-                bodyToRotate.rotation.eulerAngles.y,
-                smoothTilt.eulerAngles.z
-            );
-
-            bodyToRotate.rotation = newRotation;
-        }
-    }
-
     private Vector3 GetCameraForwardDirection()
     {
         Vector3 cameraForward = mainCamera.transform.forward;
@@ -156,45 +107,9 @@ public class SkateMovement : MonoBehaviour
         return cameraForward.normalized;
     }
 
-    private void HandleSpeedParticles()
+    public void SpeedCheat()
     {
-        var emission = speedLinesParticles.emission;
-
-        if (currentSpeed > particleSpeedThreshold)
-        {
-            if (!speedLinesParticles.isPlaying)
-                speedLinesParticles.Play();
-
-            float t = Mathf.InverseLerp(particleSpeedThreshold, maxSpeed, currentSpeed);
-            emission.rateOverTime = t * maxEmissionRate;
-        }
-        else
-        {
-            if (speedLinesParticles.isPlaying)
-                speedLinesParticles.Stop();
-        }
+        currentSpeed += 10;
     }
-
-    private void UpdateSkateSound()
-    {
-        if (currentSpeed > minSpeedToPlaySound)
-        {
-            if (!skateAudioSource.isPlaying)
-            {
-                skateAudioSource.Play();
-            }
-
-            float t = Mathf.InverseLerp(minSpeedToPlaySound, maxSpeed, currentSpeed);
-            skateAudioSource.volume = Mathf.Lerp(minVolume, maxVolume, t);
-            skateAudioSource.pitch = Mathf.Lerp(minPitch, maxPitch, t);
-        }
-        else
-        {
-            if (skateAudioSource.isPlaying)
-            {
-                skateAudioSource.Stop();
-            }
-        }
-    }
-
 }
+

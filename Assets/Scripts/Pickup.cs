@@ -5,34 +5,18 @@ using UnityEngine;
 public class Pickup : MonoBehaviour
 {
     private PickupCounter pickupCounter;
+    private CheatScript cheatScript;
     private Transform playerPos;
 
     private bool followPlayer = false;
-    private bool hasBeenCollected = false; 
+    public bool hasBeenCollected = false; 
 
     private void Start()
     {
         GameObject player = GameObject.FindWithTag("Player");
+        cheatScript = FindObjectOfType<CheatScript>();
         pickupCounter = player.GetComponent<PickupCounter>();
         playerPos = player.transform;
-    }
-
-    private void Update()
-    {
-        InstaWin();
-    }
-
-    public void InstaWin()
-    {
-        // Easter Egg
-        if (Input.GetKeyDown(KeyCode.W) && !hasBeenCollected)
-        {
-            hasBeenCollected = true;
-            followPlayer = true;
-            pickupCounter.currentPickups++;
-
-            StartCoroutine(FollowAndDestroy());
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -45,6 +29,11 @@ public class Pickup : MonoBehaviour
 
             StartCoroutine(FollowAndDestroy());
         }
+    }
+
+    private void Update()
+    {
+        InstaWin();
     }
 
     private IEnumerator FollowAndDestroy()
@@ -60,5 +49,19 @@ public class Pickup : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+    public void InstaWin()
+    {
+        if (cheatScript.cheatModeIsActive)
+        {
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                hasBeenCollected = true;
+                followPlayer = true;
+                pickupCounter.currentPickups++;
+
+                StartCoroutine(FollowAndDestroy());
+            }
+        }
     }
 }

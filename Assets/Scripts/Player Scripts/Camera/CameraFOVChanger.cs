@@ -6,12 +6,15 @@ public class CameraFOVChanger : MonoBehaviour
 {
     [SerializeField] private float FOVChangerGrade = 5f; // Qué tan rápido interpola
     [SerializeField] private float speedMultiplier = 1f; // Cuánto influye la velocidad
-    [SerializeField] private SkateMovement skateMovement;
 
     [SerializeField] private float playerCameraFOV = 60f;
     [SerializeField] private float maxFOV;
+    [SerializeField] private NewSkateMovement skateMovement;
 
-
+    private void Start()
+    {
+        skateMovement = FindObjectOfType<NewSkateMovement>();
+    }
     void FixedUpdate()
     {
         SpeedFOVChanger();
