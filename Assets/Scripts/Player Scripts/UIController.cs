@@ -38,7 +38,10 @@ public class UIController : MonoBehaviour
 
     public void UpdateVelocityUI()
     {
-        velocityText.text = Mathf.Ceil(skateMovement.currentSpeed).ToString();
+        if (skateMovement != null)
+        {
+            velocityText.text = Mathf.Ceil(skateMovement.currentSpeed).ToString();
+        }
     }
 
     public void FinnishGameUI()

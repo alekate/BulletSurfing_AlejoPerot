@@ -12,6 +12,7 @@ public class PlayerGrind : MonoBehaviour
     [SerializeField] bool jump;         //Inputs aren't used in the tutorial
     [SerializeField] Vector3 input;     //But they're here for rail switching
 
+
     [Header("Variables")]
     public bool onRail;
 
@@ -22,16 +23,14 @@ public class PlayerGrind : MonoBehaviour
 
     [Header("Scripts")]
     [SerializeField] RailScript currentRailScript;
-    Rigidbody playerRigidbody;
-    CharacterController charController;
-
     [SerializeField] NewSkateMovement skateMovement;
+    private Rigidbody rb;
 
     private void Start()
     {
-        playerRigidbody = GetComponent<Rigidbody>();
-        charController = GetComponent<CharacterController>();
         skateMovement = FindObjectOfType<NewSkateMovement>();
+        rb = GetComponent<Rigidbody>();
+
     }
     public void HandleJump(InputAction.CallbackContext context)
     {
@@ -44,13 +43,49 @@ public class PlayerGrind : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (onRail) //If on the rail, move the player along the rail
+        if (onRail)
         {
             skateMovement.hasInput = false;
             MovePlayerAlongRail();
-            skateMovement.currentSpeed = skateMovement.currentSpeed ++;
+            skateMovement.currentSpeed += 1f * Time.deltaTime;
+
+            JumpOffRail(); //  Esta línea permite salir del riel saltando
         }
     }
+
+    void StartGrinding(RailScript railScript)
+    {
+        onRail = true;
+        currentRailScript = railScript;
+
+        if (skateMovement.currentSpeed < 5)
+        {
+            // No iniciar grind si la velocidad es muy baja
+            return;
+        }
+
+        // Calcular duración total del rail
+        timeForFullSpline = currentRailScript.totalSplineLength / skateMovement.currentSpeed;
+
+        // Obtener punto más cercano en la spline y normalisedTime
+        Vector3 splinePoint;
+        float normalisedTime = currentRailScript.CalculateTargetRailPoint(transform.position, out splinePoint);
+        elapsedTime = timeForFullSpline * normalisedTime;
+
+        // Evaluar spline para obtener orientación
+        float3 pos, forward, up;
+        SplineUtility.Evaluate(currentRailScript.railSpline.Spline, normalisedTime, out pos, out forward, out up);
+
+        // Calcular dirección del grind
+        currentRailScript.CalculateDirection(forward, transform.forward);
+
+        // Posicionar jugador correctamente
+        rb.MovePosition(splinePoint + (transform.up * heightOffset));
+
+        // Desactivar input mientras grindea
+        skateMovement.hasInput = false;
+    }
+
     void MovePlayerAlongRail()
     {
         if (currentRailScript != null && onRail) //This is just some additional error checking.
@@ -71,16 +106,14 @@ public class PlayerGrind : MonoBehaviour
 
             //Next Time Normalised is the player's progress value for the next update.
             //This is used for calculating the player's rotation.
-            //Depending on the direction of the player on the spline, it will either add or subtract time from the
-            //current elapsed time.
+            //Depending on the direction of the player on the spline, it will either add or subtract time from the current elapsed time.
             float nextTimeNormalised;
             if (currentRailScript.normalDir)
                 nextTimeNormalised = (elapsedTime + Time.deltaTime) / timeForFullSpline;
             else
                 nextTimeNormalised = (elapsedTime - Time.deltaTime) / timeForFullSpline;
 
-            //Calculating the local positions of the player's current position and next position
-            //using current progress and the progress for the next update.
+            //Calculating the local positions of the player's current position and next position using current progress and the progress for the next update.
             float3 pos, tangent, up;
             float3 nextPosfloat, nextTan, nextUp;
             SplineUtility.Evaluate(currentRailScript.railSpline.Spline, progress, out pos, out tangent, out up);
@@ -90,30 +123,38 @@ public class PlayerGrind : MonoBehaviour
             Vector3 worldPos = currentRailScript.LocalToWorldConversion(pos);
             Vector3 nextPos = currentRailScript.LocalToWorldConversion(nextPosfloat);
 
-            //Setting the player's position and adding a height offset so that they're sitting on top of the rail
-            //instead of being in the middle of it.
-            transform.position = worldPos + (transform.up * heightOffset);
-           
-            //Lerping the player's current rotation to the direction of where they are to where they're going.
-            //transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(nextPos - worldPos), lerpSpeed * Time.deltaTime);
+            //Setting the player's position and adding a height offset so that they're sitting on top of the rail instead of being in the middle of it.
+            rb.MovePosition(worldPos + (transform.up * heightOffset));
 
-            //Lerping the player's up direction to match that of the rail, in relation to the player's current rotation.
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.FromToRotation(transform.up, up) * transform.rotation, lerpSpeed * Time.deltaTime);
+            //Lerping the player's current rotation to the direction of where they are to where they're going.
+            Vector3 forward = (nextPos - worldPos).normalized;
+            Quaternion targetRotation = Quaternion.LookRotation(forward, up);
+
+            Quaternion lookRot = Quaternion.LookRotation(forward, up);
+            Quaternion upRot = Quaternion.FromToRotation(transform.up, up) * transform.rotation;
+            Quaternion finalRot = Quaternion.Lerp(transform.rotation, lookRot, lerpSpeed * Time.deltaTime);
+            finalRot = Quaternion.Lerp(finalRot, upRot, lerpSpeed * Time.deltaTime);
+            rb.MoveRotation(finalRot);
 
             //Finally incrementing or decrementing elapsed time for the next update based on direction.
+            float delta = Time.deltaTime * skateMovement.currentSpeed / currentRailScript.totalSplineLength;
+
             if (currentRailScript.normalDir)
-                elapsedTime += Time.deltaTime;
+                elapsedTime += delta;
             else
-                elapsedTime -= Time.deltaTime;
+                elapsedTime -= delta;
+
         }
     }
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Rail"))
         {
-            onRail = true;
-            currentRailScript = collision.gameObject.GetComponent<RailScript>();
-            CalculateAndSetRailPosition();
+            RailScript railScript = collision.gameObject.GetComponent<RailScript>();
+            if (railScript != null)
+            {
+                StartGrinding(railScript);
+            }
         }
     }
 
@@ -123,47 +164,73 @@ public class PlayerGrind : MonoBehaviour
         {
             return;
         }
+
         //Figure out the amount of time it would take for the player to cover the rail.
         timeForFullSpline = currentRailScript.totalSplineLength / skateMovement.currentSpeed;
 
         //This is going to be the world position of where the player is going to start on the rail.
         Vector3 splinePoint;
 
-        //The 0 to 1 value of the player's position on the spline. We also get the world position of where that
-        //point is.
+        //The 0 to 1 value of the player's position on the spline. We also get the world position of where that point is.
         float normalisedTime = currentRailScript.CalculateTargetRailPoint(transform.position, out splinePoint);
         elapsedTime = timeForFullSpline * normalisedTime;
-        //Multiply the full time for the spline by the normalised time to get elapsed time. This will be used in
-        //the movement code.
+        //Multiply the full time for the spline by the normalised time to get elapsed time. This will be used in the movement code.
 
-        //Spline evaluate takes the 0 to 1 normalised time above, 
-        //and uses it to give you a local position, a tangent (forward), and up
+        //Spline evaluate takes the 0 to 1 normalised time above, and uses it to give you a local position, a tangent (forward), and up
         float3 pos, forward, up;
         SplineUtility.Evaluate(currentRailScript.railSpline.Spline, normalisedTime, out pos, out forward, out up);
+
         //Calculate the direction the player is going down the rail
         currentRailScript.CalculateDirection(forward, transform.forward);
+
         //Set player's initial position on the rail before starting the movement code.
         transform.position = splinePoint + (transform.up * heightOffset);
     }
     void ThrowOffRail()
     {
-        // Guardamos la posición actual antes de soltar al jugador
-        Vector3 worldExitPos = transform.position + transform.forward * 1;
+        if (!onRail) return; // Evita múltiples ejecuciones
 
-        // Desactivamos el estado de rail
         onRail = false;
 
-        // Posición final en mundo, fuera del riel
-        transform.position = worldExitPos;
+        // Impulso de salida del riel
+        Vector3 launchDirection = (transform.forward + Vector3.up).normalized;
+        float launchForce = 5f; // Ajustable según lo que quieras sentir
 
-        // Resetear rotación o posición local si estás bajo un parent
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero; // Reset para evitar acumulaciones raras
+            rb.AddForce(launchDirection * launchForce, ForceMode.VelocityChange);
+        }
+
+        // Restaurar estado
         transform.localRotation = Quaternion.identity;
-
-        // Importante: esto debe ir *antes* de poner el script en null
         currentRailScript = null;
-
         skateMovement.hasInput = true;
-
     }
+    void JumpOffRail()
+    {
+        if (!onRail || !jump) return;
+
+        // Resetear el flag del salto para que no se repita automáticamente
+        jump = false;
+
+        // Aplicar una fuerza de salto específica
+        Vector3 jumpDirection = (transform.forward + Vector3.up).normalized;
+        float jumpForce = 7f; // Podés ajustar esto para más impulso
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.AddForce(jumpDirection * jumpForce, ForceMode.VelocityChange);
+        }
+
+        // Restaurar estado normal
+        onRail = false;
+        currentRailScript = null;
+        skateMovement.hasInput = true;
+    }
+
 
 }

@@ -9,7 +9,7 @@ public class CheatScript : MonoBehaviour
     public bool cheatModeIsActive = false;
     [SerializeField] GameObject cheatText;
 
-    [SerializeField] SkateMovement skateMovement;
+    [SerializeField] NewSkateMovement skateMovement;
 
     private string inputBuffer = string.Empty;
     private Dictionary<string, System.Action> cheatCodes;
@@ -17,7 +17,7 @@ public class CheatScript : MonoBehaviour
 
     private void Awake()
     {
-        cheatText.SetActive(false);
+        skateMovement = FindObjectOfType<NewSkateMovement>();
 
         if (instance == null)
         {
@@ -45,9 +45,25 @@ public class CheatScript : MonoBehaviour
 
         if (cheatModeIsActive == true)
         {
-            cheatText.SetActive(true);
+            if (skateMovement != null)
+            { 
+                cheatText.SetActive(true);
+            }
+            else
+            {
+            }
 
             SpeedCheat();
+        }
+        else
+        {
+            if (skateMovement != null)
+            {
+                cheatText.SetActive(false);
+            }
+            else
+            {
+            }
         }
     }
 
@@ -80,15 +96,22 @@ public class CheatScript : MonoBehaviour
         }
 
     }
-
     void SpeedCheat()
     {
-        if (Input.GetKey(KeyCode.W))
-        {
-            skateMovement.currentSpeed += 10;
-            skateMovement.maxSpeed = 100;
 
+        if(skateMovement != null)
+        { 
+            if (Input.GetKey(KeyCode.W))
+            {
+                skateMovement.currentSpeed += 10;
+                skateMovement.maxSpeed = 100;
+            }
+        }
+        else
+        {
+            skateMovement = FindObjectOfType<NewSkateMovement>();
         }
     }
+
 
 }

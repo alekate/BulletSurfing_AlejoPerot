@@ -50,7 +50,7 @@ public class NewSkateMovement : MonoBehaviour
 
             if (Input.GetMouseButton(1) && currentSpeed > 0.1f)
             {
-                Vector3 brakeDirection = rb.velocity.normalized;
+                Vector3 brakeDirection = -rb.velocity.normalized;
                 rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
             }
         }
