@@ -36,7 +36,7 @@ public class CameraMove : MonoBehaviour
         turn.x += mouseX;
         turn.y += mouseY;
 
-        turn.y = Mathf.Clamp(turn.y, -30f, 30f);
+        turn.y = Mathf.Clamp(turn.y, -35f, 35f);
 
         transform.localRotation = Quaternion.Euler(-turn.y, turn.x, 0);
     }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Custom
   m_EditorClassIdentifier: 
   data:
-    pixelationAmount: 2
+    pixelationAmount: 0
     maxColorChannels:
       red: 0
       green: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
     colorScans:
       greenChannelMultiplier: 0.1
       redBlueChannelMultiplier: 0.15
-      sizeMultiplier: 2
+      sizeMultiplier: 0
     innerMonitorShineRadius: -0.087
     innerMonitorShineCurve: 10
-  validationId: 771124e6-b21f-4da7-af14-deed5e00f77e
+  validationId: 91f9e075-645b-4554-a382-14177e8b5b68

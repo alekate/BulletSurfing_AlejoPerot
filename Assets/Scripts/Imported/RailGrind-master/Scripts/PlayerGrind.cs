@@ -53,38 +53,6 @@ public class PlayerGrind : MonoBehaviour
         }
     }
 
-    void StartGrinding(RailScript railScript)
-    {
-        onRail = true;
-        currentRailScript = railScript;
-
-        if (skateMovement.currentSpeed < 5)
-        {
-            // No iniciar grind si la velocidad es muy baja
-            return;
-        }
-
-        // Calcular duración total del rail
-        timeForFullSpline = currentRailScript.totalSplineLength / skateMovement.currentSpeed;
-
-        // Obtener punto más cercano en la spline y normalisedTime
-        Vector3 splinePoint;
-        float normalisedTime = currentRailScript.CalculateTargetRailPoint(transform.position, out splinePoint);
-        elapsedTime = timeForFullSpline * normalisedTime;
-
-        // Evaluar spline para obtener orientación
-        float3 pos, forward, up;
-        SplineUtility.Evaluate(currentRailScript.railSpline.Spline, normalisedTime, out pos, out forward, out up);
-
-        // Calcular dirección del grind
-        currentRailScript.CalculateDirection(forward, transform.forward);
-
-        // Posicionar jugador correctamente
-        rb.MovePosition(splinePoint + (transform.up * heightOffset));
-
-        // Desactivar input mientras grindea
-        skateMovement.hasInput = false;
-    }
 
     void MovePlayerAlongRail()
     {
@@ -127,7 +95,7 @@ public class PlayerGrind : MonoBehaviour
             rb.MovePosition(worldPos + (transform.up * heightOffset));
 
             //Lerping the player's current rotation to the direction of where they are to where they're going.
-            Vector3 forward = (nextPos - worldPos).normalized;
+            Vector3 forward = transform.forward;
             Quaternion targetRotation = Quaternion.LookRotation(forward, up);
 
             Quaternion lookRot = Quaternion.LookRotation(forward, up);
@@ -158,6 +126,38 @@ public class PlayerGrind : MonoBehaviour
         }
     }
 
+    void StartGrinding(RailScript railScript)
+    {
+        onRail = true;
+        currentRailScript = railScript;
+
+        if (skateMovement.currentSpeed < 5)
+        {
+            // No iniciar grind si la velocidad es muy baja
+            return;
+        }
+
+        // Calcular duración total del rail
+        timeForFullSpline = currentRailScript.totalSplineLength / skateMovement.currentSpeed;
+
+        // Obtener punto más cercano en la spline y normalisedTime
+        Vector3 splinePoint;
+        float normalisedTime = currentRailScript.CalculateTargetRailPoint(transform.position, out splinePoint);
+        elapsedTime = timeForFullSpline * normalisedTime;
+
+        // Evaluar spline para obtener orientación
+        float3 pos, forward, up;
+        SplineUtility.Evaluate(currentRailScript.railSpline.Spline, normalisedTime, out pos, out forward, out up);
+
+        // Calcular dirección del grind
+        currentRailScript.CalculateDirection(forward, transform.forward);
+
+        // Posicionar jugador correctamente
+        rb.MovePosition(splinePoint + (transform.up * heightOffset));
+
+        // Desactivar input mientras grindea
+        skateMovement.hasInput = false;
+    }
     void CalculateAndSetRailPosition()
     {
         if (skateMovement.currentSpeed < 5)

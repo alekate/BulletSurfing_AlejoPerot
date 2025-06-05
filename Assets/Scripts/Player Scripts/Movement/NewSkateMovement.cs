@@ -4,17 +4,21 @@ public class NewSkateMovement : MonoBehaviour
 {
     [Header("Skate Settings")]
     [SerializeField] private float acceleration = 2.0f;
+    [SerializeField] private float airAcceleration;
     public float maxSpeed;
     [SerializeField] private float friction;
     [SerializeField] private float brakeForce = 20f;
     public float currentSpeed;
+
+    [Header("Jump Settings")]
+    [SerializeField] private float jumpForce = 5f;
 
     [Header("Camera")]
     [SerializeField] private Camera mainCamera;
 
     private Rigidbody rb;
     private Vector3 moveDirection;
-    private bool isSkating;
+    public bool isSkating;
     public bool hasInput = true;
 
     private void Awake()
@@ -34,6 +38,11 @@ public class NewSkateMovement : MonoBehaviour
         }
     }
 
+    private bool IsGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, 1.1f);
+    }
+
     private void PlayerInput()
     {
         if (hasInput == true)
@@ -48,6 +57,11 @@ public class NewSkateMovement : MonoBehaviour
                 isSkating = false;
             }
 
+            if (Input.GetMouseButtonDown(1) && IsGrounded())
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            }
+
             if (Input.GetMouseButton(1) && currentSpeed > 0.1f)
             {
                 Vector3 brakeDirection = -rb.velocity.normalized;
@@ -56,12 +70,15 @@ public class NewSkateMovement : MonoBehaviour
         }
     }
 
+
     private void Move()
     {
+        float currentAcceleration = IsGrounded() ? acceleration : airAcceleration;
+
         if (isSkating && currentSpeed < maxSpeed)
         {
             Vector3 desiredDirection = moveDirection.normalized;
-            rb.AddForce(desiredDirection * acceleration, ForceMode.Acceleration);
+            rb.AddForce(desiredDirection * currentAcceleration, ForceMode.Acceleration);
         }
         else if (!isSkating && currentSpeed > 0)
         {
@@ -77,6 +94,7 @@ public class NewSkateMovement : MonoBehaviour
 
         currentSpeed = rb.velocity.magnitude;
     }
+
 
     private Vector3 GetCameraForwardDirection()
     {
