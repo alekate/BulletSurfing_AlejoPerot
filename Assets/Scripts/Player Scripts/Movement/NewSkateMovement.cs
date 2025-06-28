@@ -6,6 +6,7 @@ public class NewSkateMovement : MonoBehaviour
     [SerializeField] private float acceleration = 2.0f;
     [SerializeField] private float airAcceleration;
     public float maxSpeed;
+    public float minSpeed;
     [SerializeField] private float friction;
     [SerializeField] private float brakeForce = 20f;
     public float currentSpeed;
@@ -20,6 +21,7 @@ public class NewSkateMovement : MonoBehaviour
     private Vector3 moveDirection;
     public bool isSkating;
     public bool hasInput = true;
+    public bool isNoClip = false;
 
     private void Awake()
     {
@@ -31,11 +33,30 @@ public class NewSkateMovement : MonoBehaviour
         PlayerInput();
         Move();
 
-        // Clamp currentSpeed a 0 si es muy baja
         if (currentSpeed < 0.1f)
         {
             currentSpeed = 0f;
         }
+
+        //No Clip Cheat
+        if (isNoClip)
+        {
+            if (Input.GetMouseButton(0)) 
+            {
+                Vector3 direction = mainCamera.transform.forward;
+                float upDown = 0;
+
+                if (Input.GetKey(KeyCode.E)) upDown = 1f;
+                else if (Input.GetKey(KeyCode.Q)) upDown = -1f;
+
+                direction += Vector3.up * upDown;
+
+                transform.Translate(direction.normalized * maxSpeed * Time.deltaTime, Space.World);
+            }
+
+            return;
+        }
+
     }
 
     private bool IsGrounded()
@@ -66,6 +87,15 @@ public class NewSkateMovement : MonoBehaviour
             {
                 Vector3 brakeDirection = -rb.velocity.normalized;
                 rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
+            }
+
+            if (!IsGrounded() && currentSpeed < minSpeed)
+            {
+                Vector3 horizontalVelocity = rb.velocity;
+                horizontalVelocity.y = 0;
+
+                Vector3 newVelocity = horizontalVelocity.normalized * minSpeed;
+                rb.velocity = new Vector3(newVelocity.x, rb.velocity.y, newVelocity.z);
             }
         }
     }
@@ -107,4 +137,30 @@ public class NewSkateMovement : MonoBehaviour
     {
         currentSpeed += 10;
     }
+
+    public void ToggleNoClip()
+    {
+        isNoClip = !isNoClip;
+
+        if (isNoClip)
+        {
+            rb.useGravity = false;
+            rb.velocity = Vector3.zero;
+            rb.isKinematic = true;
+
+            Collider col = GetComponent<Collider>();
+            if (col != null)
+                col.enabled = false;
+        }
+        else
+        {
+            rb.useGravity = true;
+            rb.isKinematic = false;
+
+            Collider col = GetComponent<Collider>();
+            if (col != null)
+                col.enabled = true;
+        }
+    }
+
 }
