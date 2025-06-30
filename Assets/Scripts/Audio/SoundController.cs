@@ -8,9 +8,11 @@ public class SoundController : MonoBehaviour
 
     [Header("Audio Clips")]
     [SerializeField] private AudioClip pickupSound;
-    [SerializeField] private AudioClip menuSound;
     [SerializeField] private AudioClip menuMusic;
     [SerializeField] private AudioClip gameMusic;
+    [SerializeField] private AudioClip buttonSound;
+    [SerializeField] private AudioClip loseSound;
+    [SerializeField] private AudioClip grindSound;
 
     [Header("Audio Sources")]
     private AudioSource audioSource;
@@ -27,10 +29,20 @@ public class SoundController : MonoBehaviour
         audioSource.PlayOneShot(pickupSound);
     }
 
-    public void MenuSFX()
+    public void ButtonSFX()
     {
-        audioSource.PlayOneShot(menuSound);
+        audioSource.PlayOneShot(buttonSound);
     }
+
+    public void GrindSFX()
+    {
+        audioSource.PlayOneShot(grindSound);
+    }
+    public void LoseSFX()
+    {
+        audioSource.PlayOneShot(loseSound);
+    }
+
 
     // --- Music ---
     public void MenuMusic()
