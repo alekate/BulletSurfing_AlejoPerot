@@ -6,6 +6,7 @@ public class Pickup : MonoBehaviour
 {
     private PickupCounter pickupCounter;
     private CheatScript cheatScript;
+    private SoundController soundController;
     private Transform playerPos;
 
     private bool followPlayer = false;
@@ -16,6 +17,7 @@ public class Pickup : MonoBehaviour
         GameObject player = GameObject.FindWithTag("Player");
         cheatScript = FindObjectOfType<CheatScript>();
         pickupCounter = player.GetComponent<PickupCounter>();
+        soundController= FindObjectOfType<SoundController>();
         playerPos = player.transform;
     }
 
@@ -25,6 +27,7 @@ public class Pickup : MonoBehaviour
         {
             hasBeenCollected = true; 
             followPlayer = true;
+            soundController.PickupSFX();
             pickupCounter.currentPickups++;
 
             StartCoroutine(FollowAndDestroy());

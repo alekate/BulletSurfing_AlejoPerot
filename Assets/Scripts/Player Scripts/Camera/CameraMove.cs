@@ -6,9 +6,11 @@ public class CameraMove : MonoBehaviour
     public float sensX = 1f;
     public float sensY = 1f;
 
-    [Header("Inclinación")]
+    [Header("Inclinaciï¿½n")]
     public float turnTiltMultiplier = 3f; 
     [SerializeField] private Transform cameraHolder;
+
+    public GameObject PlayerRef;
 
     private Vector2 turn; 
     private float mouseXDelta;
@@ -24,6 +26,7 @@ public class CameraMove : MonoBehaviour
     {
         CameraMovement();
         UpdateCameraTilt();
+        UpdateCameraPosition();
     }
 
     void CameraMovement()
@@ -59,5 +62,10 @@ public class CameraMove : MonoBehaviour
                 Time.deltaTime * 5f
             );
         }
+    }
+
+    void UpdateCameraPosition()
+    {
+        transform.position = PlayerRef.transform.position;
     }
 }

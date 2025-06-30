@@ -32,7 +32,9 @@ public class CheatScript : MonoBehaviour
 
         cheatCodes = new Dictionary<string, System.Action>()
         {
-            { "CHEATMODE", ActivateCheatMode },
+            { "CHEATON", ActivateCheatMode },
+
+            { "CHEATOFF",  DeactivateCheatMode },
 
             //Plantilla para poner mas cheat :o
         };
@@ -54,6 +56,7 @@ public class CheatScript : MonoBehaviour
             }
 
             SpeedCheat();
+            NoClip();
         }
         else
         {
@@ -70,6 +73,11 @@ public class CheatScript : MonoBehaviour
     void ActivateCheatMode()
     {
         cheatModeIsActive = true;
+    }
+
+    void DeactivateCheatMode()
+    {
+        cheatModeIsActive = false;
     }
 
     void CheatmodeEnabler()
@@ -113,5 +121,19 @@ public class CheatScript : MonoBehaviour
         }
     }
 
+    void NoClip()
+    {
+        if (skateMovement != null)
+        {
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                skateMovement.ToggleNoClip();
+            }
+        }
+        else
+        {
+            skateMovement = FindObjectOfType<NewSkateMovement>();
+        }
+    }
 
 }

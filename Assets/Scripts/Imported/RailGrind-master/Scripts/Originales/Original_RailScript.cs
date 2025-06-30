@@ -10,6 +10,9 @@ public class Original_RailScript : MonoBehaviour
     public SplineContainer railSpline;
     public float totalSplineLength;
 
+    [SerializeField]
+    float CollisionAngle;
+
     private void Start()
     {
         railSpline = GetComponent<SplineContainer>();
@@ -60,11 +63,18 @@ public class Original_RailScript : MonoBehaviour
         //This calculates the severity of the angle between the player's forward and the forward of the point on the spline.
         //90 degrees is the cutoff point as it's the perpendicular to the rail. Anything more than that and the player is clearly
         //facing the other direction to the rail point.
-        float angle = Vector3.Angle(railForward, playerForward.normalized);
+        Vector3 railFwd = new Vector3(railForward.x, railForward.y, railForward.z);
+        railFwd.y = 0;
+        playerForward.y = 0;
+
+        railFwd.Normalize();
+        playerForward.Normalize();
+
+        CollisionAngle = Vector3.Dot(railForward, playerForward.normalized);
         
-        if (angle > 90f)
+        if (CollisionAngle > 0f)
             normalDir = true;
-        else if (angle > 1)
+        else
             normalDir = false;
     }
 }

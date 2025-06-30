@@ -24,15 +24,6 @@ public class MenuController : MonoBehaviour
         {
             if (currentCoroutine != null)
                 StopCoroutine(currentCoroutine);
-
-            if (!isPaused)
-            {
-                PauseGame();
-            }
-            else
-            {
-                ResumeGame();
-            }
         }
     }
 
