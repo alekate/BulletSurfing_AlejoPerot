@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scripts/Audio/SkateWindAudioController.cs.meta
 guid: 6ec0aa1c625cd224aa97ecf66cd31753
+========
+guid: 5c1b9588bd971624bbb07b322852fb6d
+>>>>>>>> main:Assets/RailScript_NoPlayer.cs.meta
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
