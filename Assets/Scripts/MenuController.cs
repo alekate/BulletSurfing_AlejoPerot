@@ -6,10 +6,8 @@ public class MenuController : MonoBehaviour
 {
     [SerializeField] private GameObject gameplayUI;
     [SerializeField] private GameObject pauseUI;
-    [SerializeField] private GameObject tutorialUI;
 
-    [SerializeField] private bool isPaused;
-    [SerializeField] private bool showTutorial = true;
+    public bool isPaused;
 
     private float duration = 1f;
     private float startScale = 1f;
@@ -18,12 +16,17 @@ public class MenuController : MonoBehaviour
 
     void Update()
     {
-        TutorialUI();
-
         if (Input.GetKeyDown(KeyCode.P))
         {
             if (currentCoroutine != null)
+            {
                 StopCoroutine(currentCoroutine);
+            }
+
+            if (!isPaused)
+                PauseGame();
+            else
+                ResumeGame();
         }
     }
 
@@ -45,23 +48,6 @@ public class MenuController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         currentCoroutine = StartCoroutine(SpeedUpTime());
-    }
-
-    public void TutorialUI()
-    {
-        if (Input.GetKeyDown(KeyCode.Tab))
-        {
-            showTutorial = !showTutorial;
-
-            if (showTutorial == true)
-            { 
-                tutorialUI.gameObject.SetActive(true);
-            }
-            if (showTutorial == false)
-            {
-                tutorialUI.gameObject.SetActive(false);
-            }
-        }
     }
 
     public void LoadGame()

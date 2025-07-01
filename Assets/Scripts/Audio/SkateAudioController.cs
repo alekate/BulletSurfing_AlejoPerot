@@ -1,41 +1,49 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class SkateAudioController : MonoBehaviour
 {
-    [SerializeField] private AudioSource skateAudioSource;
-    [SerializeField] private float minVolume = 0.1f;
-    [SerializeField] private float maxVolume = 1f;
-    [SerializeField] private float minPitch = 0.8f;
-    [SerializeField] private float maxPitch = 1.2f;
-    [SerializeField] private float minSpeedToPlaySound = 0.5f;
     [SerializeField] private NewSkateMovement skateMovement;
+    [SerializeField] private Original_PlayerGrind playerGrind;
+
+    [SerializeField] private List<SpeedBasedSound> sounds = new List<SpeedBasedSound>();
 
     private void Start()
     {
-        skateMovement = FindObjectOfType<NewSkateMovement>();
+        if (skateMovement == null)
+            skateMovement = FindObjectOfType<NewSkateMovement>();
     }
 
     private void FixedUpdate()
     {
         float currentSpeed = skateMovement.currentSpeed;
 
-        if (currentSpeed > minSpeedToPlaySound)
+        foreach (var sound in sounds)
         {
-            if (!skateAudioSource.isPlaying)
+            if (sound.audioSource == null) continue;
+
+            if (sound.onlyPlayWhenGrinding && !playerGrind.onRail)
             {
-                skateAudioSource.Play();
+                if (sound.audioSource.isPlaying)
+                    sound.audioSource.Stop();
+                continue;
             }
 
-            float t = Mathf.InverseLerp(minSpeedToPlaySound, skateMovement.maxSpeed, currentSpeed);
-            skateAudioSource.volume = Mathf.Lerp(minVolume, maxVolume, t);
-            skateAudioSource.pitch = Mathf.Lerp(minPitch, maxPitch, t);
-        }
-        else
-        {
-            if (skateAudioSource.isPlaying)
+            if (currentSpeed > sound.minSpeedToPlaySound)
             {
-                skateAudioSource.Stop();
+                if (!sound.audioSource.isPlaying)
+                    sound.audioSource.Play();
+
+                float t = Mathf.InverseLerp(sound.minSpeedToPlaySound, sound.maxSpeed, currentSpeed);
+                sound.audioSource.volume = Mathf.Lerp(sound.minVolume, sound.maxVolume, t);
+                sound.audioSource.pitch = Mathf.Lerp(sound.minPitch, sound.maxPitch, t);
+            }
+            else
+            {
+                if (sound.audioSource.isPlaying)
+                    sound.audioSource.Stop();
             }
         }
     }
+
 }

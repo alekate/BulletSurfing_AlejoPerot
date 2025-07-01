@@ -12,6 +12,7 @@ public class NewSkateMovement : MonoBehaviour
     public float currentSpeed;
 
     [SerializeField] private Original_PlayerGrind Original_PlayerGrind;
+    [SerializeField] private SoundController soundController;
 
     [Header("Jump Settings")]
     [SerializeField] private float jumpForce = 5f;
@@ -28,6 +29,10 @@ public class NewSkateMovement : MonoBehaviour
     [Header("DoubleClick")]
     private float lastRightClickTime = -1f;
     private float doubleClickThreshold = 0.3f;
+
+    public bool accelerate;
+    public bool stop;
+
 
     private void Awake()
     {
@@ -50,14 +55,10 @@ public class NewSkateMovement : MonoBehaviour
         // No Clip Cheat
         if (isNoClip)
         {
-            if (Input.GetMouseButton(0))
+            if (isSkating)
             {
                 Vector3 direction = mainCamera.transform.forward;
                 float upDown = 0;
-
-                if (Input.GetKey(KeyCode.E)) upDown = 1f;
-                else if (Input.GetKey(KeyCode.Q)) upDown = -1f;
-
                 direction += Vector3.up * upDown;
                 transform.Translate(direction.normalized * maxSpeed * Time.deltaTime, Space.World);
             }
@@ -75,44 +76,12 @@ public class NewSkateMovement : MonoBehaviour
     {
         if (hasInput && !Original_PlayerGrind.onRail)
         {
-            if (Input.GetMouseButton(0))
+            if (isSkating)
             {
-                isSkating = true;
                 moveDirection = GetCameraForwardDirection();
             }
-            else
-            {
-                isSkating = false;
-            }
 
-
-            if (Input.GetMouseButtonDown(1))
-            {
-                float timeSinceLastClick = Time.time - lastRightClickTime;
-
-                if (timeSinceLastClick <= doubleClickThreshold)
-                {
-                    if (Original_PlayerGrind.onRail)
-                    {
-                        Original_PlayerGrind.ThrowOffRail();
-                        Debug.Log("Salto del rail");
-                    }
-                    else if (IsGrounded())
-                    {
-                        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-                        Debug.Log("Salto normal");
-                    }
-
-                    lastRightClickTime = -1f; // reset
-                }
-                else
-                {
-                    lastRightClickTime = Time.time;
-                }
-            }
-
-
-            if (Input.GetMouseButton(1) && currentSpeed > 0.1f)
+            if (stop && currentSpeed > 0.1f)
             {
                 Vector3 brakeDirection = -rb.velocity.normalized;
                 rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
@@ -133,6 +102,31 @@ public class NewSkateMovement : MonoBehaviour
         }
     }
 
+    public void Jump()
+    {
+        float timeSinceLastClick = Time.time - lastRightClickTime;
+
+        if (timeSinceLastClick <= doubleClickThreshold)
+        {
+            if (Original_PlayerGrind.onRail)
+            {
+                Original_PlayerGrind.ThrowOffRail();
+                Debug.Log("Salto del rail");
+            }
+            else if (IsGrounded())
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+                soundController.JumpSFX();
+                Debug.Log("Salto normal");
+            }
+
+            lastRightClickTime = -1f; // reset
+        }
+        else
+        {
+            lastRightClickTime = Time.time;
+        }
+    }
 
     private void Move()
     {

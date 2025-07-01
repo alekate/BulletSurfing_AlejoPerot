@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.32680222, g: 0.33326456, b: 0.3136305, a: 1}
+  m_IndirectSpecularColor: {r: 0.011963516, g: 0.013530956, b: 0.018916592, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -9391,7 +9391,7 @@ Material:
     m_Colors:
     - _BorderTint: {r: 0, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _ColorScans: {r: 0.1, g: 0.15, b: 2, a: 0}
+    - _ColorScans: {r: 0.1, g: 0.15, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
 --- !u!43 &344504919
@@ -18793,11 +18793,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edec0b3ddb8cf58438ee6bcd9282bc81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turn: {x: 0, y: 0}
   sensX: 2
   sensY: 2
+  turnTiltMultiplier: 3
   cameraHolder: {fileID: 1893873478}
-  skateMovement: {fileID: 1953744636}
+  PlayerRef: {fileID: 0}
+  haveTilt: 0
+  inputDir: {x: 0, y: 0}
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18874,7 +18876,7 @@ MonoBehaviour:
   crtRenderSettings: {fileID: 11400000, guid: 2d929546960894d169f1999a321e4ff4, type: 2}
   _runtimeMaterial: {fileID: 330250045}
   data:
-    pixelationAmount: 2
+    pixelationAmount: 0
     maxColorChannels:
       red: 0
       green: 0
@@ -18900,7 +18902,7 @@ MonoBehaviour:
     colorScans:
       greenChannelMultiplier: 0.1
       redBlueChannelMultiplier: 0.15
-      sizeMultiplier: 2
+      sizeMultiplier: 0
     innerMonitorShineRadius: -0.087
     innerMonitorShineCurve: 10
 --- !u!43 &973798279
@@ -22241,8 +22243,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Assets: \nPaperMill Skatepark by flunkedpunk\nFont Mighty Souly by Google
-    Fonts"
+  m_text: "Assets: \nPaperMill Skatepark by flunkedpunk\nFont Mighty Souly\nMusic
+    and sounds by Pixbay"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: bed82383f939b954a851d3e3332db251, type: 2}
   m_sharedMaterial: {fileID: 6089333705045341729, guid: bed82383f939b954a851d3e3332db251, type: 2}
@@ -29606,13 +29608,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ae742493eb49324d966e64b8f9ca500, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skateMovementScripts: {fileID: 1953744636}
+  skateMovement: {fileID: 0}
   velocityText: {fileID: 915371331}
   pickupCounterScript: {fileID: 1953744639}
   currentPickupText: {fileID: 1830111584}
   allPickupsText: {fileID: 2109899464}
   youWinText: {fileID: 1995253346}
   youLoseText: {fileID: 1788532989}
+  soundController: {fileID: 0}
 --- !u!114 &1681450581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29627,10 +29630,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameplayUI: {fileID: 775275810}
   pauseUI: {fileID: 254169416}
-  tutorialUI: {fileID: 1239096622}
-  ExitButton: {fileID: 1729784212}
   isPaused: 0
-  showTutorial: 1
 --- !u!114 &1681450582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34788,19 +34788,6 @@ MonoBehaviour:
   decreasingFactor: 10
   debugMouseX: 0
   mainCamera: {fileID: 963194227}
-  raycastOrigin: {fileID: 117845562}
-  bodyToRotate: {fileID: 1953744635}
-  raycastDistance: 3
-  rotationSpeed: 5
-  speedLinesParticles: {fileID: 224526311}
-  particleSpeedThreshold: 20
-  maxEmissionRate: 100
-  skateAudioSource: {fileID: 1953744640}
-  minVolume: 0.1
-  maxVolume: 1
-  minPitch: 0.8
-  maxPitch: 1.2
-  minSpeedToPlaySound: 0.5
 --- !u!54 &1953744637
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -34842,9 +34829,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FOVChangerGrade: 10
   speedMultiplier: 1
-  skateMovement: {fileID: 1953744636}
   playerCameraFOV: 60
   maxFOV: 80
+  skateMovement: {fileID: 0}
 --- !u!114 &1953744639
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,27 +1,20 @@
-using System.Collections;
 using UnityEngine;
 
 public class SoundController : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private NewSkateMovement skateMovement;
+    [Header("Audio Sources")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioSource winSource;
+    [SerializeField] private AudioSource loseSource;
+    [SerializeField] private AudioSource jumpSource;
 
     [Header("Audio Clips")]
-    [SerializeField] private AudioClip pickupSound;
-    [SerializeField] private AudioClip menuMusic;
-    [SerializeField] private AudioClip gameMusic;
     [SerializeField] private AudioClip buttonSound;
-    [SerializeField] private AudioClip loseSound;
-    [SerializeField] private AudioClip grindSound;
+    [SerializeField] private AudioClip pickupSound;
 
-    [Header("Audio Sources")]
-    private AudioSource audioSource;
 
-    void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-        audioSource.ignoreListenerPause = true;
-    }
+    private bool hasPlayedWin = false;
+    private bool hasPlayedLose = false;
 
     // --- SFX ---
     public void PickupSFX()
@@ -29,29 +22,55 @@ public class SoundController : MonoBehaviour
         audioSource.PlayOneShot(pickupSound);
     }
 
+    public void JumpSFX()
+    {
+        if (!jumpSource.isPlaying)
+            jumpSource.Play();
+    }
+
     public void ButtonSFX()
     {
         audioSource.PlayOneShot(buttonSound);
     }
 
-    public void GrindSFX()
-    {
-        audioSource.PlayOneShot(grindSound);
-    }
     public void LoseSFX()
     {
-        audioSource.PlayOneShot(loseSound);
+        if (hasPlayedLose || hasPlayedWin) return;
+
+        hasPlayedLose = true;
+        PlayExclusiveSource(loseSource);
     }
 
-
-    // --- Music ---
-    public void MenuMusic()
+    public void WinSFX()
     {
-        audioSource.PlayOneShot(menuMusic);
+        if (hasPlayedWin || hasPlayedLose) return;
+
+        hasPlayedWin = true;
+        PlayExclusiveSource(winSource);
     }
 
-    public void GameMusic()
+    private void PlayExclusiveSource(AudioSource source)
     {
-        audioSource.PlayOneShot(gameMusic);
+        StopAllSoundsExcept(source);
+        source.Play();
+    }
+
+    private void StopAllSoundsExcept(AudioSource exception)
+    {
+        AudioSource[] sources = {  winSource, loseSource, jumpSource };
+
+        foreach (var src in sources)
+        {
+            if (src != null && src != exception)
+            {
+                src.Stop();
+            }
+        }
+    }
+
+    public void ResetWinLoseFlags()
+    {
+        hasPlayedWin = false;
+        hasPlayedLose = false;
     }
 }

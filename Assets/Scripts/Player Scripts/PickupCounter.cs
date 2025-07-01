@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PickupCounter : MonoBehaviour
 {
@@ -23,15 +24,24 @@ public class PickupCounter : MonoBehaviour
     }
 
     public void PickedUpAllPickups()
-    {        
+    {
         if (currentPickups == allPickups)
         {
             UIController.FinnishGameUI();
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                menuController.LoadMainMenu();
+                string currentScene = SceneManager.GetActiveScene().name;
+
+                if (currentScene == "Level1")
+                {
+                    SceneManager.LoadScene("Level2");
+                }
+                else if (currentScene == "Level2")
+                {
+                    menuController.LoadMainMenu();
+                }
             }
         }
     }
-
 }

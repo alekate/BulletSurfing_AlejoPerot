@@ -17,7 +17,10 @@ public class CheatScript : MonoBehaviour
 
     private void Awake()
     {
-        skateMovement = FindObjectOfType<NewSkateMovement>();
+        if (skateMovement == null)
+        {
+            skateMovement = FindObjectOfType<NewSkateMovement>();
+        }
 
         if (instance == null)
         {
@@ -39,7 +42,7 @@ public class CheatScript : MonoBehaviour
             //Plantilla para poner mas cheat :o
         };
     }
-
+  
     // Update is called once per frame
     void Update()
     {

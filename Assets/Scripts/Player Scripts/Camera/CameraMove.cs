@@ -6,7 +6,7 @@ public class CameraMove : MonoBehaviour
     public float sensX = 1f;
     public float sensY = 1f;
 
-    [Header("Inclinaci�n")]
+    [Header("Inclinacion")]
     public float turnTiltMultiplier = 3f; 
     [SerializeField] private Transform cameraHolder;
 
@@ -16,6 +16,8 @@ public class CameraMove : MonoBehaviour
     private float mouseXDelta;
 
     [SerializeField] private bool haveTilt = false;
+
+    public Vector2 inputDir = Vector2.zero;
 
     void Start()
     {
@@ -31,8 +33,8 @@ public class CameraMove : MonoBehaviour
 
     void CameraMovement()
     {
-        float mouseX = Input.GetAxis("Mouse X") * sensX;
-        float mouseY = Input.GetAxis("Mouse Y") * sensY;
+        float mouseX = inputDir.x * sensX;
+        float mouseY = inputDir.y * sensY;
 
         mouseXDelta = mouseX; 
 

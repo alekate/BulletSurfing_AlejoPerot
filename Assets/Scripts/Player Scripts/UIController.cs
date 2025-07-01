@@ -17,6 +17,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI youWinText;
     [SerializeField] private TextMeshProUGUI youLoseText;
 
+    [SerializeField] private SoundController soundController;
     private void Start()
     {
         youLoseText.gameObject.SetActive(false);
@@ -47,11 +48,13 @@ public class UIController : MonoBehaviour
     public void FinnishGameUI()
     {
         youWinText.gameObject.SetActive(true);
+        soundController.WinSFX();
     }
 
     public void LoseGameUI()
     {
         youLoseText.gameObject.SetActive(true);
+        soundController.LoseSFX();
     }
 
 }
