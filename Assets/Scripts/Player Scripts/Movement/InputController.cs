@@ -38,6 +38,16 @@ public class InputController : MonoBehaviour
             skateMovement.Jump();
         }
 
+        if (Input.GetMouseButtonDown(0))
+        {
+            skateMovement.StartCharge();
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            skateMovement.ReleaseCharge();
+        }
+
         float mouseX = Input.GetAxis("Mouse X");
         float mouseY = Input.GetAxis("Mouse Y");
 

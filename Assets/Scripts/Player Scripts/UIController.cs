@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-
 public class UIController : MonoBehaviour
 {
     [Header("Player")]
@@ -17,13 +16,14 @@ public class UIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI youWinText;
     [SerializeField] private TextMeshProUGUI youLoseText;
 
+    [Header("Sound Controller")]
     [SerializeField] private SoundController soundController;
+
     private void Start()
     {
         youLoseText.gameObject.SetActive(false);
         youWinText.gameObject.SetActive(false);
         skateMovement = FindObjectOfType<NewSkateMovement>();
-
     }
     void Update()
     {
@@ -45,7 +45,7 @@ public class UIController : MonoBehaviour
         }
     }
 
-    public void FinnishGameUI()
+    public void FinishGameUI()
     {
         youWinText.gameObject.SetActive(true);
         soundController.WinSFX();
@@ -56,5 +56,4 @@ public class UIController : MonoBehaviour
         youLoseText.gameObject.SetActive(true);
         soundController.LoseSFX();
     }
-
 }

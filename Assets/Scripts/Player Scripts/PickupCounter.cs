@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class PickupCounter : MonoBehaviour
 {
     public int currentPickups;               
-    public int allPickups;            
+    public int allPickups;
     [SerializeField] private UIController UIController;
     [SerializeField] private MenuController menuController;
 
@@ -27,7 +27,7 @@ public class PickupCounter : MonoBehaviour
     {
         if (currentPickups == allPickups)
         {
-            UIController.FinnishGameUI();
+            UIController.FinishGameUI();
 
             if (Input.GetKeyDown(KeyCode.Space))
             {

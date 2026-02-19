@@ -4,18 +4,32 @@ public class NewSkateMovement : MonoBehaviour
 {
     [Header("Skate Settings")]
     [SerializeField] private float acceleration = 2.0f;
+    [SerializeField] private float clickImpulse = 0f;
     [SerializeField] private float airAcceleration;
     public float maxSpeed;
     public float minSpeed;
     [SerializeField] private float friction;
+    [SerializeField] private float movingFrictionMultiplier = 0.3f;
     [SerializeField] private float brakeForce = 20f;
     public float currentSpeed;
-
     [SerializeField] private Original_PlayerGrind Original_PlayerGrind;
     [SerializeField] private SoundController soundController;
 
+    [Header("Charge Impulse")]
+    [SerializeField] private float maxChargeTime = 2f;
+    [SerializeField] private float minImpulse = 1f;
+    [SerializeField] private float maxImpulse = 7f;
+    [SerializeField] private float stationaryThreshold = 0.5f;
+ 
+
+
+
+
+    private float chargeStartTime;
+    private bool isCharging;
+
     [Header("Jump Settings")]
-    [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float jumpForce = 3f;
 
     [Header("Camera")]
     [SerializeField] private Camera mainCamera;
@@ -30,6 +44,10 @@ public class NewSkateMovement : MonoBehaviour
     private float lastRightClickTime = -1f;
     private float doubleClickThreshold = 0.3f;
 
+    [Header("Stop Spam Checker")]
+    [SerializeField] private float clickCooldown = 0.2f;
+    private float lastLeftClickTime;
+
     public bool accelerate;
     public bool stop;
 
@@ -40,6 +58,7 @@ public class NewSkateMovement : MonoBehaviour
         Original_PlayerGrind = GetComponent<Original_PlayerGrind>();
     }
 
+    //UPDATES///////////////////////////////////////////
     private void FixedUpdate()
     {
         Original_PlayerGrind.grindSpeed = currentSpeed;
@@ -65,7 +84,10 @@ public class NewSkateMovement : MonoBehaviour
 
             return;
         }
+
     }
+
+    //////////////////////////////////////////////////
 
     private bool IsGrounded()
     {
@@ -81,12 +103,6 @@ public class NewSkateMovement : MonoBehaviour
                 moveDirection = GetCameraForwardDirection();
             }
 
-            if (stop && currentSpeed > 0.1f)
-            {
-                Vector3 brakeDirection = -rb.velocity.normalized;
-                rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
-            }
-
             if (!IsGrounded() && currentSpeed < minSpeed)
             {
                 Vector3 horizontalVelocity = rb.velocity;
@@ -95,6 +111,15 @@ public class NewSkateMovement : MonoBehaviour
                 Vector3 newVelocity = horizontalVelocity.normalized * minSpeed;
                 rb.velocity = new Vector3(newVelocity.x, rb.velocity.y, newVelocity.z);
             }
+
+            if (!IsGrounded())
+                return;
+
+            if (stop && currentSpeed > 0.1f)
+            {
+                Vector3 brakeDirection = -rb.velocity.normalized;
+                rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
+            }
         }
         else
         {
@@ -102,6 +127,55 @@ public class NewSkateMovement : MonoBehaviour
         }
     }
 
+    //MOVIMIENTO CON CLICKS IZQ////////////////////////////////////////
+    public void ApplyClickImpulse()
+    {
+        if (!hasInput || Original_PlayerGrind.onRail)
+            return;
+
+        if (!IsGrounded())
+            return;
+
+        if (Time.time < lastLeftClickTime + clickCooldown)
+            return; // todavía está en cooldown
+
+        if (currentSpeed + clickImpulse > maxSpeed)
+            return;
+
+        Vector3 direction = GetCameraForwardDirection();
+        rb.AddForce(direction * clickImpulse, ForceMode.Impulse);
+
+        lastLeftClickTime = Time.time; // guardamos cuándo fue el click válido
+    }
+
+    public void StartCharge()
+    {
+        if (!IsGrounded() || Original_PlayerGrind.onRail)
+            return;
+
+        isCharging = true;
+        chargeStartTime = Time.time;
+    }
+
+    public void ReleaseCharge()
+    {
+        if (!isCharging)
+            return;
+
+        isCharging = false;
+
+        float heldTime = Time.time - chargeStartTime;
+        float chargePercent = Mathf.Clamp01(heldTime / maxChargeTime);
+
+        float finalImpulse = Mathf.Lerp(minImpulse, maxImpulse, chargePercent);
+
+        Vector3 direction = GetCameraForwardDirection();
+        rb.AddForce(direction * finalImpulse, ForceMode.Impulse);
+    }
+
+    ///////////////////////////////////////////////////////////////
+
+    //SALTO////////////////////////////////////////
     public void Jump()
     {
         float timeSinceLastClick = Time.time - lastRightClickTime;
@@ -127,21 +201,32 @@ public class NewSkateMovement : MonoBehaviour
             lastRightClickTime = Time.time;
         }
     }
+    ///////////////////////////////////////////////////////////////
 
+    //MOVIMIENTO MANTENIENDO CLICK IZQ////////////////////////////////////////
     private void Move()
     {
         float currentAcceleration = IsGrounded() ? acceleration : airAcceleration;
 
-        if (isSkating && currentSpeed < maxSpeed)
+        /*if (isSkating && currentSpeed < maxSpeed)
         {
             Vector3 desiredDirection = moveDirection.normalized;
             rb.AddForce(desiredDirection * currentAcceleration, ForceMode.Acceleration);
-        }
-        else if (!isSkating && currentSpeed > 0)
+        }*/
+        if (!isSkating && currentSpeed > 0)
         {
-            Vector3 frictionForce = rb.velocity.normalized * friction;
+            float appliedFriction = friction;
+
+            if (currentSpeed > stationaryThreshold)
+            {
+                appliedFriction *= movingFrictionMultiplier;
+                // Si ya está en movimiento, pierde menos velocidad
+            }
+
+            Vector3 frictionForce = -rb.velocity.normalized * appliedFriction;
             rb.AddForce(frictionForce, ForceMode.Acceleration);
         }
+
 
         if (currentSpeed > maxSpeed)
         {
@@ -151,7 +236,9 @@ public class NewSkateMovement : MonoBehaviour
 
         currentSpeed = rb.velocity.magnitude;
     }
-
+    ////////////////////////////////////////////////////
+    
+    //ROTACION DE PLAYER Y DIRECCION DE CAMARA///////////////////////////////////////////
     private void UpdatePlayerRotation()
     {
         transform.rotation = new Quaternion(
@@ -168,7 +255,9 @@ public class NewSkateMovement : MonoBehaviour
         cameraForward.y = 0;
         return cameraForward.normalized;
     }
+    ////////////////////////////////////////////////////
 
+    //CHEATS///////////////////////////////////////////////
     public void SpeedCheat()
     {
         currentSpeed += 10;
@@ -198,4 +287,5 @@ public class NewSkateMovement : MonoBehaviour
                 col.enabled = true;
         }
     }
+    ////////////////////////////////////////////////////
 }

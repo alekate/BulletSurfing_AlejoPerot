@@ -5,6 +5,7 @@ using UnityEngine;
 public class Pickup : MonoBehaviour
 {
     private PickupCounter pickupCounter;
+    private FlashScreenEffect flashScreenEffect;
     private CheatScript cheatScript;
     private SoundController soundController;
     private Transform playerPos;
@@ -17,7 +18,8 @@ public class Pickup : MonoBehaviour
         GameObject player = GameObject.FindWithTag("Player");
         cheatScript = FindObjectOfType<CheatScript>();
         pickupCounter = player.GetComponent<PickupCounter>();
-        soundController= FindObjectOfType<SoundController>();
+        flashScreenEffect = FindAnyObjectByType<FlashScreenEffect>();
+        soundController = FindObjectOfType<SoundController>();
         playerPos = player.transform;
     }
 
@@ -28,6 +30,7 @@ public class Pickup : MonoBehaviour
             hasBeenCollected = true; 
             followPlayer = true;
             soundController.PickupSFX();
+            flashScreenEffect.WhiteScreenEffect();
             pickupCounter.currentPickups++;
 
             StartCoroutine(FollowAndDestroy());
