@@ -71,7 +71,7 @@ public class SkateMovement : MonoBehaviour
 
     private void Move()
     {
-        Vector3 flatVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+        Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
         float currentVelocityMagnitude = flatVelocity.magnitude;
 
         if (isSkating && currentVelocityMagnitude < maxSpeed)
@@ -94,10 +94,10 @@ public class SkateMovement : MonoBehaviour
         if (currentVelocityMagnitude > maxSpeed)
         {
             Vector3 limitedVelocity = flatVelocity.normalized * maxSpeed;
-            rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
+            rb.linearVelocity = new Vector3(limitedVelocity.x, rb.linearVelocity.y, limitedVelocity.z);
         }
 
-        currentSpeed = rb.velocity.magnitude;
+        currentSpeed = rb.linearVelocity.magnitude;
     }
 
     private Vector3 GetCameraForwardDirection()

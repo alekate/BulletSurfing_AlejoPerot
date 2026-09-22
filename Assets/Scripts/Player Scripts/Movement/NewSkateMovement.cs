@@ -105,11 +105,11 @@ public class NewSkateMovement : MonoBehaviour
 
             if (!IsGrounded() && currentSpeed < minSpeed)
             {
-                Vector3 horizontalVelocity = rb.velocity;
+                Vector3 horizontalVelocity = rb.linearVelocity;
                 horizontalVelocity.y = 0;
 
                 Vector3 newVelocity = horizontalVelocity.normalized * minSpeed;
-                rb.velocity = new Vector3(newVelocity.x, rb.velocity.y, newVelocity.z);
+                rb.linearVelocity = new Vector3(newVelocity.x, rb.linearVelocity.y, newVelocity.z);
             }
 
             if (!IsGrounded())
@@ -117,7 +117,7 @@ public class NewSkateMovement : MonoBehaviour
 
             if (stop && currentSpeed > 0.1f)
             {
-                Vector3 brakeDirection = -rb.velocity.normalized;
+                Vector3 brakeDirection = -rb.linearVelocity.normalized;
                 rb.AddForce(brakeDirection * brakeForce, ForceMode.Acceleration);
             }
         }
@@ -223,18 +223,18 @@ public class NewSkateMovement : MonoBehaviour
                 // Si ya está en movimiento, pierde menos velocidad
             }
 
-            Vector3 frictionForce = -rb.velocity.normalized * appliedFriction;
+            Vector3 frictionForce = -rb.linearVelocity.normalized * appliedFriction;
             rb.AddForce(frictionForce, ForceMode.Acceleration);
         }
 
 
         if (currentSpeed > maxSpeed)
         {
-            Vector3 limitedVelocity = rb.velocity.normalized * maxSpeed;
-            rb.velocity = new Vector3(limitedVelocity.x, rb.velocity.y, limitedVelocity.z);
+            Vector3 limitedVelocity = rb.linearVelocity.normalized * maxSpeed;
+            rb.linearVelocity = new Vector3(limitedVelocity.x, rb.linearVelocity.y, limitedVelocity.z);
         }
 
-        currentSpeed = rb.velocity.magnitude;
+        currentSpeed = rb.linearVelocity.magnitude;
     }
     ////////////////////////////////////////////////////
     
@@ -270,7 +270,7 @@ public class NewSkateMovement : MonoBehaviour
         if (isNoClip)
         {
             rb.useGravity = false;
-            rb.velocity = Vector3.zero;
+            rb.linearVelocity = Vector3.zero;
             rb.isKinematic = true;
 
             Collider col = GetComponent<Collider>();
