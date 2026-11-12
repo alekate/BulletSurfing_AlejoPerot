@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+
 public class UIController : MonoBehaviour
 {
     [Header("Player")]
@@ -19,12 +20,19 @@ public class UIController : MonoBehaviour
     [Header("Sound Controller")]
     [SerializeField] private SoundController soundController;
 
+    // NUEVO: Referencia al temporizador
+    private CountdownTimer countdownTimer;
+
     private void Start()
     {
         youLoseText.gameObject.SetActive(false);
         youWinText.gameObject.SetActive(false);
-        skateMovement = FindObjectOfType<NewSkateMovement>();
+        skateMovement = FindFirstObjectByType<NewSkateMovement>();
+
+        // Buscamos el timer automáticamente al iniciar
+        countdownTimer = FindFirstObjectByType<CountdownTimer>();
     }
+
     void Update()
     {
         UpdateVelocityUI();
@@ -49,6 +57,12 @@ public class UIController : MonoBehaviour
     {
         youWinText.gameObject.SetActive(true);
         soundController.WinSFX();
+
+        // ¡AQUÍ ESTÁ LA MAGIA! Detenemos el timer y marcamos la victoria
+        if (countdownTimer != null)
+        {
+            countdownTimer.StopTimerForWin();
+        }
     }
 
     public void LoseGameUI()

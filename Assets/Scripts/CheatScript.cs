@@ -58,7 +58,6 @@ public class CheatScript : MonoBehaviour
             {
             }
 
-            SpeedCheat();
             NoClip();
         }
         else
@@ -107,23 +106,6 @@ public class CheatScript : MonoBehaviour
         }
 
     }
-    void SpeedCheat()
-    {
-
-        if(skateMovement != null)
-        { 
-            if (Input.GetKey(KeyCode.W))
-            {
-                skateMovement.currentSpeed += 10;
-                skateMovement.maxSpeed = 100;
-            }
-        }
-        else
-        {
-            skateMovement = FindObjectOfType<NewSkateMovement>();
-        }
-    }
-
     void NoClip()
     {
         if (skateMovement != null)

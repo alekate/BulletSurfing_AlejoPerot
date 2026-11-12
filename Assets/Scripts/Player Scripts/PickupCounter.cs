@@ -35,7 +35,7 @@ public class PickupCounter : MonoBehaviour
 
                 if (currentScene == "Level1")
                 {
-                    SceneManager.LoadScene("Level2");
+                    menuController.LoadLevel2();
                 }
                 else if (currentScene == "Level2")
                 {

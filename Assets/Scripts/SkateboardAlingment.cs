@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SkateboardAlingment : MonoBehaviour
+public class SkateboardAlignment : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private NewSkateMovement skateMovement;
@@ -12,20 +12,32 @@ public class SkateboardAlingment : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private float raycastDistance = 3f;
-    [SerializeField] private float rotationSpeed = 5f;
+    [SerializeField] private float rotationSpeed = 10f;
     [SerializeField] private int rayCount = 5;
     [SerializeField] private float raySpacing = 0.5f;
-    [SerializeField] private Vector3 positionOffset; 
+    [SerializeField] private Vector3 positionOffset;
 
-    private Quaternion smoothTilt = Quaternion.identity;
+    private Rigidbody playerRb;
+
+    private void Start()
+    {
+        // Obtenemos automáticamente el Rigidbody del jugador desde el script de movimiento
+        if (skateMovement != null)
+        {
+            playerRb = skateMovement.GetComponent<Rigidbody>();
+        }
+    }
 
     private void Update()
     {
-        FollowPlayer();        
+        if (playerTarget != null)
+        {
+            transform.position = playerTarget.position + positionOffset;
+        }
     }
+
     private void FixedUpdate()
     {
-
         Vector3 totalNormal = Vector3.zero;
         int hitCount = 0;
 
@@ -45,36 +57,52 @@ public class SkateboardAlingment : MonoBehaviour
         if (hitCount > 0)
         {
             Vector3 averageNormal = (totalNormal / hitCount).normalized;
-            AlignBoardToGround(averageNormal);
-
-            if (skateMovement.isSkating)
-            {
-                AlignBoardToCamera(averageNormal);
-            }
+            AlignBoard(averageNormal);
         }
     }
 
-    private void FollowPlayer()
+    private void AlignBoard(Vector3 groundNormal)
     {
-        if (playerTarget != null)
+        Vector3 currentForward;
+
+        if (playerRb != null && playerRb.linearVelocity.sqrMagnitude > 0.1f)
         {
-            transform.position = playerTarget.position + positionOffset;
+            currentForward = playerRb.linearVelocity.normalized;
         }
-    }
+        else
+        {
+            // Si está quieto, mantiene el frente que ya tenía
+            currentForward = bodyToRotate.forward;
+        }
 
-    private void AlignBoardToGround(Vector3 groundNormal)
-    {
-        Quaternion groundTilt = Quaternion.FromToRotation(Vector3.up, groundNormal);
-        smoothTilt = Quaternion.Slerp(smoothTilt, groundTilt, Time.fixedDeltaTime * rotationSpeed);
-        // Solo inclina, no rota hacia adelante
-    }
+        /*if (skateMovement.isSkating)
+        {
+            // Mira hacia donde apunta la cámara
+            //currentForward = orientationReference.forward;
+        }
+        else
+        {
+            // Mira hacia la dirección real del movimiento (inercia)
+            // Usamos sqrMagnitude > 0.1f para asegurarnos de que solo rote si se está moviendo lo suficiente
+            if (playerRb != null && playerRb.linearVelocity.sqrMagnitude > 0.1f)
+            {
+                currentForward = playerRb.linearVelocity.normalized;
+            }
+            else
+            {
+                // Si está quieto, mantiene el frente que ya tenía
+                currentForward = bodyToRotate.forward;
+            }
+        }*/
 
-    private void AlignBoardToCamera(Vector3 groundNormal)
-    {
-        Vector3 forward = orientationReference.forward;
-        Vector3 projectedForward = Vector3.ProjectOnPlane(forward, groundNormal).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(projectedForward, groundNormal);
-        bodyToRotate.rotation = Quaternion.Slerp(bodyToRotate.rotation, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        // Proyecta el vector hacia adelante sobre el plano del suelo para que no se clave en el piso ni se levante
+        Vector3 projectedForward = Vector3.ProjectOnPlane(currentForward, groundNormal).normalized;
+
+        if (projectedForward != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(projectedForward, groundNormal);
+            bodyToRotate.rotation = Quaternion.Slerp(bodyToRotate.rotation, targetRotation, Time.fixedDeltaTime * rotationSpeed);
+        }
     }
 
     private void OnDrawGizmosSelected()

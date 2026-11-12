@@ -10,8 +10,9 @@ public class Pickup : MonoBehaviour
     private SoundController soundController;
     private Transform playerPos;
 
+    private Outline outlineScript;
     private bool followPlayer = false;
-    public bool hasBeenCollected = false; 
+    public bool hasBeenCollected = false;
 
     private void Start()
     {
@@ -21,25 +22,33 @@ public class Pickup : MonoBehaviour
         flashScreenEffect = FindAnyObjectByType<FlashScreenEffect>();
         soundController = FindObjectOfType<SoundController>();
         playerPos = player.transform;
+
+        outlineScript = GetComponentInChildren<Outline>();
+        if (outlineScript != null) outlineScript.enabled = false;
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player") && !hasBeenCollected)
         {
-            hasBeenCollected = true; 
+            hasBeenCollected = true;
             followPlayer = true;
+            if (outlineScript != null) outlineScript.enabled = false;
+
             soundController.PickupSFX();
             flashScreenEffect.WhiteScreenEffect();
             pickupCounter.currentPickups++;
-
             StartCoroutine(FollowAndDestroy());
         }
     }
 
     private void Update()
     {
-        InstaWin();
+        // El pickup lee directamente la variable estática del InputController
+        if (outlineScript != null && !hasBeenCollected)
+        {
+            outlineScript.enabled = InputController.isOutlinePressed;
+        }
     }
 
     private IEnumerator FollowAndDestroy()
@@ -53,21 +62,18 @@ public class Pickup : MonoBehaviour
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-
         Destroy(gameObject);
     }
+
     public void InstaWin()
     {
-        if (cheatScript.cheatModeIsActive)
+        if (cheatScript.cheatModeIsActive && !hasBeenCollected)
         {
-            if (Input.GetKeyDown(KeyCode.L))
-            {
-                hasBeenCollected = true;
-                followPlayer = true;
-                pickupCounter.currentPickups++;
-
-                StartCoroutine(FollowAndDestroy());
-            }
+            hasBeenCollected = true;
+            followPlayer = true;
+            if (outlineScript != null) outlineScript.enabled = false;
+            pickupCounter.currentPickups++;
+            StartCoroutine(FollowAndDestroy());
         }
     }
 }
