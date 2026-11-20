@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Cinemachine;
 
 public class CameraMove : MonoBehaviour
 {
@@ -6,12 +7,12 @@ public class CameraMove : MonoBehaviour
     [SerializeField] private Transform playerRef;
     [SerializeField] private Transform cameraHolder;
     [SerializeField] private NewSkateMovement skateMovement;
-    private Camera cam;
+
+    [SerializeField] private CinemachineCamera cinemachineCamera;
 
     [Header("Sensitivity & Limits")]
-    [SerializeField] private float maxLookAngle = 80f;
+    [SerializeField] private float maxLookAngle = 80f; // ¡Regresó el límite de cuello!
     [SerializeField] private float quickTurnSpeed = 12f;
-    // Ya no expondremos sensX y sensY aquí porque el Menú los controla, pero los mantenemos privados
     private float sensX;
     private float sensY;
 
@@ -29,81 +30,104 @@ public class CameraMove : MonoBehaviour
     [SerializeField] private float kickbackRecoverySpeed = 10f;
 
     public Vector2 inputDir;
-    private Vector2 turn;
-    private float kickbackOffset;
+
+    private CinemachinePanTilt panTiltControl;
     private float currentExtraFOV;
+    private float kickbackOffset;
     private float quickTurnOffset;
+
+    // Almacenamos los valores ideales para que Cinemachine no los sobreescriba
+    private float targetPan;
+    private float targetTilt;
 
     private void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        cam = GetComponentInChildren<Camera>();
+
         if (skateMovement == null && playerRef != null)
             skateMovement = playerRef.GetComponent<NewSkateMovement>();
 
-        UpdateSensitivity(); // Cargamos la sensibilidad al iniciar
+        if (cinemachineCamera == null)
+            cinemachineCamera = FindFirstObjectByType<CinemachineCamera>();
+
+        if (cinemachineCamera != null)
+        {
+            panTiltControl = cinemachineCamera.GetComponent<CinemachinePanTilt>();
+            if (panTiltControl != null)
+            {
+                targetPan = panTiltControl.PanAxis.Value;
+                targetTilt = panTiltControl.TiltAxis.Value;
+            }
+        }
+
+        UpdateSensitivity();
     }
 
-    // NUEVO MÉTODO: Lee el valor guardado y lo doma para el nuevo sistema
     public void UpdateSensitivity()
     {
-        float savedSens = PlayerPrefs.GetFloat("MouseSensitivity", 2.5f); // 2.5 será el valor por defecto
-
-        // El 0.1f compensa los altísimos valores de píxeles que envía el "Delta" del ratón
+        float savedSens = PlayerPrefs.GetFloat("MouseSensitivity", 2.5f);
+        // Bajamos drásticamente el multiplicador para domar el delta del mouse en Cinemachine
         sensX = savedSens * 0.1f;
         sensY = savedSens * 0.1f;
     }
 
     private void Update()
     {
-        if (playerRef == null) return;
-        UpdateRotation();
+        if (playerRef == null || panTiltControl == null) return;
+
+        UpdateCinemachineRotation();
         UpdateTilt();
-        UpdateFOV();
-        UpdatePosition();
+        UpdateCinemachineFOV();
     }
 
-    private void UpdateRotation()
+    private void UpdateCinemachineRotation()
     {
-        turn.x += inputDir.x * sensX;
-        turn.y += inputDir.y * sensY;
+        // 1. Manejo del eje Y (Tilt / Arriba y Abajo) CON LÍMITE
+        // ¡CAMBIAMOS EL "+" POR UN "-" AQUÍ!
+        targetTilt -= inputDir.y * sensY;
 
-        turn.y = Mathf.Clamp(turn.y, -maxLookAngle, maxLookAngle);
+        targetTilt = Mathf.Clamp(targetTilt, -maxLookAngle, maxLookAngle);
 
         kickbackOffset = Mathf.Lerp(kickbackOffset, 0f, Time.deltaTime * kickbackRecoverySpeed);
-        quickTurnOffset = Mathf.Lerp(quickTurnOffset, 0f, Time.deltaTime * quickTurnSpeed);
+        panTiltControl.TiltAxis.Value = targetTilt + kickbackOffset;
 
-        transform.localRotation = Quaternion.Euler(-turn.y - kickbackOffset, turn.x - quickTurnOffset, 0);
+        // 2. Manejo del eje X (Pan / Izquierda y Derecha)
+        targetPan += inputDir.x * sensX;
+        quickTurnOffset = Mathf.Lerp(quickTurnOffset, 0f, Time.deltaTime * quickTurnSpeed);
+        panTiltControl.PanAxis.Value = targetPan - quickTurnOffset;
     }
 
     public void QuickTurn180()
     {
-        turn.x += 180f;
+        targetPan += 180f;
         quickTurnOffset += 180f;
     }
 
     private void UpdateTilt()
     {
-        if (!enableTilt || cameraHolder == null) return;
-        float tiltAngle = -(inputDir.x * sensX) * turnTiltMultiplier;
-        Quaternion targetRotation = Quaternion.Euler(cameraHolder.localEulerAngles.x, cameraHolder.localEulerAngles.y, tiltAngle);
-        cameraHolder.localRotation = Quaternion.Lerp(cameraHolder.localRotation, targetRotation, Time.deltaTime * 5f);
+        if (!enableTilt || cinemachineCamera == null) return;
+
+        // CINEMACHINE TILT: Usamos el parámetro "Dutch" (Inclinación Z de lente) 
+        // Esto elimina cualquier conflicto o sobrescritura con el motor.
+        float targetDutch = -(inputDir.x * sensX) * turnTiltMultiplier;
+
+        cinemachineCamera.Lens.Dutch = Mathf.Lerp(cinemachineCamera.Lens.Dutch, targetDutch, Time.deltaTime * 5f);
     }
 
-    private void UpdateFOV()
+    private void UpdateCinemachineFOV()
     {
-        if (cam == null || skateMovement == null) return;
+        if (cinemachineCamera == null || skateMovement == null) return;
+
         float speedFOV = skateMovement.currentSpeed * fovSpeedMultiplier;
         float anticipationFOV = 0f;
-        if (skateMovement.IsCharging) anticipationFOV = skateMovement.GetChargePercent() * chargeFOVOffset;
-        float targetFOV = Mathf.Min(baseFOV + speedFOV + currentExtraFOV + anticipationFOV, maxFOV);
-        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFOV, fovChangeSpeed * Time.deltaTime);
-        currentExtraFOV = Mathf.Lerp(currentExtraFOV, 0f, Time.deltaTime * kickbackRecoverySpeed);
-    }
 
-    private void UpdatePosition()
-    {
-        transform.position = playerRef.position;
+        if (skateMovement.IsCharging)
+            anticipationFOV = skateMovement.GetChargePercent() * chargeFOVOffset;
+
+        float targetFOV = Mathf.Min(baseFOV + speedFOV + currentExtraFOV + anticipationFOV, maxFOV);
+
+        cinemachineCamera.Lens.FieldOfView = Mathf.Lerp(cinemachineCamera.Lens.FieldOfView, targetFOV, fovChangeSpeed * Time.deltaTime);
+        currentExtraFOV = Mathf.Lerp(currentExtraFOV, 0f, Time.deltaTime * kickbackRecoverySpeed);
     }
 
     public void ApplyPushFeedback(float chargeIntensity)

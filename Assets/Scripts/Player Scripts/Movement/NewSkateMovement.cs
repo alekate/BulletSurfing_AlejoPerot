@@ -18,14 +18,16 @@ public class NewSkateMovement : MonoBehaviour
     [Tooltip("Fuerza con la que el patín intenta frenar hasta maxSpeed si vas demasiado rápido")]
     [SerializeField] private float overSpeedDrag = 10f;
 
-    [Header("Charge Mechanics")]
+    [Header("Steering & Charging (Clic Izquierdo)")]
+    [Tooltip("Qué tan rápido gira el patín hacia la cámara al mantener un solo clic")]
+    [SerializeField] private float steerSharpness = 8f;
     [SerializeField] private float maxChargeTime = 1.5f;
     [SerializeField] private float minImpulse = 5f;
     [SerializeField] private float maxImpulse = 20f;
 
-    [Header("Jumping")]
+    [Header("Jumping (Clic Derecho)")]
     [SerializeField] private float jumpForce = 5f;
-    [SerializeField] private float doubleClickThreshold = 0.3f;
+    [SerializeField] private float doubleClickThreshold = 0.3f; // Tiempo máximo entre clics para saltar/cargar
 
     [Header("State (For External Scripts)")]
     public bool isSkating;
@@ -52,8 +54,14 @@ public class NewSkateMovement : MonoBehaviour
 
     private Rigidbody rb;
     private Collider playerCollider;
+
+    // Variables de control de estado
     private float chargeStartTime;
     private bool isCharging;
+    private bool isSteering;
+
+    // Temporizadores separados para no confundir clics derechos e izquierdos
+    private float lastLeftClickTime = -1f;
     private float lastRightClickTime = -1f;
 
     private void Awake()
@@ -80,6 +88,7 @@ public class NewSkateMovement : MonoBehaviour
         UpdateDrag();
         ApplyBraking();
         UpdatePlayerRotation();
+        HandleSteering();
         LimitSpeed();
         FreezeIfTooSlow();
     }
@@ -89,7 +98,6 @@ public class NewSkateMovement : MonoBehaviour
         if (armAnimator == null) return;
 
         bool isMoving = currentSpeed > 0.1f;
-
         bool grounded = IsGrounded();
 
         armAnimator.SetBool("isGrounded", grounded);
@@ -150,6 +158,46 @@ public class NewSkateMovement : MonoBehaviour
         }
     }
 
+    private void HandleSteering()
+    {
+        if (isSteering && IsGrounded() && !isCharging && currentSpeed > stopThreshold)
+        {
+            Vector3 targetDir = GetCameraForwardDirection();
+            Vector3 currentVel = rb.linearVelocity;
+            Vector3 flatVel = new Vector3(currentVel.x, 0f, currentVel.z);
+            float currentMag = flatVel.magnitude;
+
+            Vector3 newDir = Vector3.Lerp(flatVel.normalized, targetDir, Time.fixedDeltaTime * steerSharpness).normalized;
+            rb.linearVelocity = new Vector3(newDir.x * currentMag, currentVel.y, newDir.z * currentMag);
+        }
+    }
+
+    // --- CLIC IZQUIERDO: Dirección (1 clic) o Carga (Doble clic) ---
+    public void OnSteerChargePressed()
+    {
+        if (Time.time - lastLeftClickTime <= doubleClickThreshold)
+        {
+            StartCharge();
+            isSteering = false;
+        }
+        else
+        {
+            isSteering = true;
+            isCharging = false;
+        }
+
+        lastLeftClickTime = Time.time;
+    }
+
+    public void OnSteerChargeReleased()
+    {
+        if (isCharging)
+        {
+            ReleaseCharge();
+        }
+        isSteering = false;
+    }
+
     public float GetChargePercent()
     {
         if (!isCharging) return 0f;
@@ -157,35 +205,30 @@ public class NewSkateMovement : MonoBehaviour
         return Mathf.Clamp01(heldTime / maxChargeTime);
     }
 
-    public void StartCharge()
+    private void StartCharge()
     {
         if (!IsGrounded() || (playerGrind != null && playerGrind.onRail)) return;
-
         isSkating = true;
         isCharging = true;
         chargeStartTime = Time.time;
     }
 
-    public void ReleaseCharge()
+    private void ReleaseCharge()
     {
         if (!isCharging) return;
-
         float chargePercent = GetChargePercent();
-
         isCharging = false;
         isSkating = false;
 
         float finalImpulse = Mathf.Lerp(minImpulse, maxImpulse, chargePercent);
         Vector3 pushDirection = GetCameraForwardDirection();
-
         rb.AddForce(pushDirection * finalImpulse, ForceMode.VelocityChange);
 
-        if (cameraController != null)
-        {
-            cameraController.ApplyPushFeedback(chargePercent);
-        }
+        if (cameraController != null) cameraController.ApplyPushFeedback(chargePercent);
     }
 
+    // --- CLIC DERECHO: Salto (Doble clic) ---
+    // (El freno se sigue leyendo desde InputController con JumpBrake.IsPressed())
     public void Jump()
     {
         if (Time.time - lastRightClickTime <= doubleClickThreshold)
@@ -200,6 +243,7 @@ public class NewSkateMovement : MonoBehaviour
                 rb.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
                 if (soundController != null) soundController.JumpSFX();
             }
+            // Reseteamos el tiempo para que no haga un salto triple si haces clic muy rápido
             lastRightClickTime = -1f;
         }
         else
@@ -211,7 +255,6 @@ public class NewSkateMovement : MonoBehaviour
     private void UpdatePlayerRotation()
     {
         if (cameraController == null) return;
-
         Vector3 camEuler = cameraController.transform.eulerAngles;
         transform.rotation = Quaternion.Euler(0f, camEuler.y, 0f);
     }
@@ -219,7 +262,6 @@ public class NewSkateMovement : MonoBehaviour
     private Vector3 GetCameraForwardDirection()
     {
         if (cameraController == null) return transform.forward;
-
         Vector3 forward = cameraController.transform.forward;
         forward.y = 0;
         return forward.normalized;
@@ -228,7 +270,6 @@ public class NewSkateMovement : MonoBehaviour
     private void HandleNoClip()
     {
         if (!isNoClip) return;
-
         Vector3 direction = cameraController.transform.forward;
         transform.Translate(direction.normalized * noClipSpeed * Time.deltaTime, Space.World);
     }
@@ -239,7 +280,6 @@ public class NewSkateMovement : MonoBehaviour
         rb.useGravity = !isNoClip;
         rb.isKinematic = isNoClip;
         if (playerCollider != null) playerCollider.enabled = !isNoClip;
-
         if (isNoClip) rb.linearVelocity = Vector3.zero;
     }
 }
