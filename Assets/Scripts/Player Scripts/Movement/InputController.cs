@@ -16,8 +16,8 @@ public class InputController : MonoBehaviour
         controls = new PlayerControls();
 
         controls.Gameplay.JumpBrake.performed += ctx => { if (skateMovement != null) skateMovement.Jump(); };
-        controls.Gameplay.Charge.started += ctx => { if (skateMovement != null) skateMovement.StartCharge(); };
-        controls.Gameplay.Charge.canceled += ctx => { if (skateMovement != null) skateMovement.ReleaseCharge(); };
+        controls.Gameplay.Charge.started += ctx => { if (skateMovement != null) skateMovement.OnSteerChargePressed(); };
+        controls.Gameplay.Charge.canceled += ctx => { if (skateMovement != null) skateMovement.OnSteerChargeReleased(); };
         controls.Gameplay.QuickTurn.performed += ctx => { if (cameraMove != null) cameraMove.QuickTurn180(); };
 
         controls.Gameplay.CheatWin.performed += ctx =>
@@ -39,7 +39,7 @@ public class InputController : MonoBehaviour
 
     void Update()
     {
-        if (menuController != null && menuController.isPaused)
+        if ((menuController != null && menuController.isPaused) || (skateMovement != null && skateMovement.isFrozen))
         {
             if (cameraMove != null) cameraMove.inputDir = Vector2.zero;
             return;

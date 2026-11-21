@@ -69,5 +69,10 @@ public class UIController : MonoBehaviour
     {
         youLoseText.gameObject.SetActive(true);
         soundController.LoseSFX();
+
+        if (skateMovement != null)
+        {
+            skateMovement.FreezePlayer();
+        }
     }
 }
